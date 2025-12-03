@@ -58,4 +58,76 @@ public static partial class FootballLogMessages
         Level = LogLevel.Debug,
         Message = "Database query executed in {ElapsedMs}ms")]
     public static partial void LogQueryExecuted(ILogger logger, long elapsedMs);
+
+    [LoggerMessage(
+        EventId = 1010,
+        Level = LogLevel.Information,
+        Message = "Fetching competition from API: {CompetitionCode}")]
+    public static partial void LogFetchingCompetition(ILogger logger, string competitionCode);
+
+    [LoggerMessage(
+        EventId = 1011,
+        Level = LogLevel.Information,
+        Message = "Competition fetched successfully: {CompetitionCode} - {CompetitionName}")]
+    public static partial void LogCompetitionFetched(ILogger logger, string competitionCode, string competitionName);
+
+    [LoggerMessage(
+        EventId = 1012,
+        Level = LogLevel.Warning,
+        Message = "Competition not found: {CompetitionCode}")]
+    public static partial void LogCompetitionNotFound(ILogger logger, string competitionCode);
+
+    [LoggerMessage(
+        EventId = 1013,
+        Level = LogLevel.Warning,
+        Message = "Rate limit exceeded for competition: {CompetitionCode}")]
+    public static partial void LogRateLimitExceeded(ILogger logger, string competitionCode);
+
+    [LoggerMessage(
+        EventId = 1014,
+        Level = LogLevel.Error,
+        Message = "Authentication error for competition: {CompetitionCode}")]
+    public static partial void LogAuthenticationError(ILogger logger, string competitionCode);
+
+    [LoggerMessage(
+        EventId = 1015,
+        Level = LogLevel.Error,
+        Message = "API error for competition {CompetitionCode}: {ErrorMessage}")]
+    public static partial void LogApiError(ILogger logger, string competitionCode, string errorMessage, Exception? exception);
+
+    [LoggerMessage(
+        EventId = 1016,
+        Level = LogLevel.Warning,
+        Message = "API request timeout for competition: {CompetitionCode}")]
+    public static partial void LogApiTimeout(ILogger logger, string competitionCode);
+
+    [LoggerMessage(
+        EventId = 1017,
+        Level = LogLevel.Information,
+        Message = "Competition sync started: {CompetitionCode}")]
+    public static partial void LogCompetitionSyncStarted(ILogger logger, string competitionCode);
+
+    [LoggerMessage(
+        EventId = 1018,
+        Level = LogLevel.Information,
+        Message = "Competition sync completed: {CompetitionCode}, seasons processed: {SeasonsCount}")]
+    public static partial void LogCompetitionSyncCompleted(ILogger logger, string competitionCode, int seasonsCount);
+
+    [LoggerMessage(
+        EventId = 1019,
+        Level = LogLevel.Error,
+        Message = "Competition sync failed: {CompetitionCode}, error: {ErrorMessage}")]
+    public static partial void LogCompetitionSyncFailed(ILogger logger, string competitionCode, string errorMessage, Exception? exception);
+
+    [LoggerMessage(
+        EventId = 1020,
+        Level = LogLevel.Information,
+        Message = "Season retrieved: {SeasonId}")]
+    public static partial void LogSeasonRetrieved(ILogger logger, int seasonId);
+
+    [LoggerMessage(
+        EventId = 1021,
+        Level = LogLevel.Warning,
+        Message = "Season not found: {SeasonId}")]
+    public static partial void LogSeasonNotFound(ILogger logger, int seasonId);
 }

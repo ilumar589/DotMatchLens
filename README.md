@@ -33,6 +33,45 @@ All nullable warnings are treated as errors. Use proper null checking and non-nu
 ### Global Usings
 Global usings are configured in `GlobalUsings.cs` files in each project.
 
+### Prefer Concrete Types Over Interfaces
+Avoid unnecessary abstractions. Use concrete types instead of interfaces when the abstraction provides no real benefit:
+- Use `ImmutableArray<T>` instead of `IReadOnlyList<T>` or `IEnumerable<T>` for immutable collections
+- Dependency injection works fine with concrete types
+- Avoid creating interfaces solely for mocking in tests
+
+```csharp
+// Prefer this
+public readonly record struct SeasonDto(
+    int Id,
+    ImmutableArray<string>? Stages);
+
+// Instead of this
+public readonly record struct SeasonDto(
+    int Id,
+    IReadOnlyList<string>? Stages);
+```
+
+### Testing Without Interfaces
+Use these approaches for testing without introducing unnecessary interface abstractions:
+
+1. **HttpMessageHandler for HTTP clients** - Inject custom handlers via `HttpClientFactory`
+   ```csharp
+   services.AddHttpClient<FootballDataApiClient>()
+       .ConfigurePrimaryHttpMessageHandler(() => new MockHttpMessageHandler());
+   ```
+
+2. **In-memory database for EF Core** - Use `UseInMemoryDatabase` for unit tests
+   ```csharp
+   var options = new DbContextOptionsBuilder<FootballDbContext>()
+       .UseInMemoryDatabase("TestDb")
+       .Options;
+   ```
+
+3. **WebApplicationFactory for integration tests** - Test actual API endpoints
+   ```csharp
+   public class ApiTests : IClassFixture<WebApplicationFactory<Program>>
+   ```
+
 ### Entity Framework Configuration
 - **NoTracking by default** - Optimized for read-heavy operations
 - **Projections to readonly record structs** - Efficient data transfer
