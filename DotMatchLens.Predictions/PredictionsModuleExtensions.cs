@@ -1,6 +1,7 @@
 using DotMatchLens.Predictions.Agents;
 using DotMatchLens.Predictions.Endpoints;
 using DotMatchLens.Predictions.Services;
+using DotMatchLens.Predictions.Tools;
 
 namespace DotMatchLens.Predictions;
 
@@ -23,6 +24,18 @@ public static class PredictionsModuleExtensions
         services.AddScoped<IPredictionAgent, OllamaPredictionAgent>();
         services.AddScoped<PredictionService>();
 
+        // Register vector embedding service with HTTP client
+        services.AddHttpClient<VectorEmbeddingService>(client =>
+        {
+            client.BaseAddress = new Uri("http://localhost:11434");
+        });
+
+        // Register agent tools
+        services.AddScoped<GetCompetitionHistoryTool>();
+        services.AddScoped<FindSimilarTeamsTool>();
+        services.AddScoped<SeasonStatisticsTool>();
+        services.AddScoped<CompetitionSearchTool>();
+
         return services;
     }
 
@@ -34,6 +47,7 @@ public static class PredictionsModuleExtensions
         ArgumentNullException.ThrowIfNull(endpoints);
 
         endpoints.MapPredictionEndpoints();
+        endpoints.MapToolEndpoints();
 
         return endpoints;
     }

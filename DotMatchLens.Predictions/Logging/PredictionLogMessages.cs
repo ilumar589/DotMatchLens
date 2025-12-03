@@ -57,5 +57,47 @@ public static partial class PredictionLogMessages
         EventId = 2009,
         Level = LogLevel.Warning,
         Message = "Error generating embedding: {ErrorMessage}")]
-    public static partial void LogEmbeddingError(ILogger logger, string errorMessage, Exception exception);
+    public static partial void LogEmbeddingError(ILogger logger, string errorMessage, Exception? exception);
+
+    [LoggerMessage(
+        EventId = 2010,
+        Level = LogLevel.Debug,
+        Message = "Generating embedding for text of length: {TextLength}")]
+    public static partial void LogGeneratingEmbedding(ILogger logger, int textLength);
+
+    [LoggerMessage(
+        EventId = 2011,
+        Level = LogLevel.Debug,
+        Message = "Embedding generated with {Dimensions} dimensions")]
+    public static partial void LogEmbeddingGenerated(ILogger logger, int dimensions);
+
+    [LoggerMessage(
+        EventId = 2012,
+        Level = LogLevel.Information,
+        Message = "Executing tool: {ToolName}")]
+    public static partial void LogToolExecuting(ILogger logger, string toolName);
+
+    [LoggerMessage(
+        EventId = 2013,
+        Level = LogLevel.Information,
+        Message = "Tool {ToolName} completed successfully")]
+    public static partial void LogToolCompleted(ILogger logger, string toolName);
+
+    [LoggerMessage(
+        EventId = 2014,
+        Level = LogLevel.Error,
+        Message = "Tool {ToolName} failed: {ErrorMessage}")]
+    public static partial void LogToolFailed(ILogger logger, string toolName, string errorMessage, Exception? exception);
+
+    [LoggerMessage(
+        EventId = 2015,
+        Level = LogLevel.Information,
+        Message = "Competition history retrieved: {CompetitionCode}, {SeasonCount} seasons")]
+    public static partial void LogCompetitionHistoryRetrieved(ILogger logger, string competitionCode, int seasonCount);
+
+    [LoggerMessage(
+        EventId = 2016,
+        Level = LogLevel.Information,
+        Message = "Similar teams found: {Count} results")]
+    public static partial void LogSimilarTeamsFound(ILogger logger, int count);
 }
