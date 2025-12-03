@@ -1,3 +1,4 @@
+using DotMatchLens.Predictions.Agents;
 using DotMatchLens.Predictions.Models;
 using DotMatchLens.Predictions.Services;
 using Microsoft.AspNetCore.Http.HttpResults;
@@ -29,7 +30,7 @@ public static class PredictionEndpoints
 
         group.MapPost("/query", QueryAgentAsync)
             .WithName("QueryAgent")
-            .WithDescription("Query the AI agent with a custom question");
+            .WithDescription("Query the AI agent with a custom question using Microsoft Agent Framework");
 
         return endpoints;
     }
@@ -66,10 +67,11 @@ public static class PredictionEndpoints
 
     private static async Task<Ok<AgentResponse>> QueryAgentAsync(
         QueryAgentRequest request,
-        PredictionService service,
+        FootballAgentService agentService,
         CancellationToken cancellationToken = default)
     {
-        var response = await service.QueryAgentAsync(request.Query, request.MatchId, cancellationToken)
+        // Use FootballAgentService with Microsoft Agent Framework instead of custom implementation
+        var response = await agentService.QueryAsync(request.Query, cancellationToken)
             .ConfigureAwait(false);
         return TypedResults.Ok(response);
     }
