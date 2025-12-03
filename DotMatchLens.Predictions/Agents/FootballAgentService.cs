@@ -78,7 +78,19 @@ public sealed class FootballAgentService
     /// <param name="query">The user's question or query.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>Agent response with the answer.</returns>
-    public async Task<AgentResponse> QueryAsync(string query, CancellationToken cancellationToken = default)
+    public Task<AgentResponse> QueryAsync(string query, CancellationToken cancellationToken = default)
+    {
+        return QueryAsync(query, context: null, cancellationToken);
+    }
+
+    /// <summary>
+    /// Query the football agent with a user question and optional context.
+    /// </summary>
+    /// <param name="query">The user's question or query.</param>
+    /// <param name="context">Optional context to provide to the agent.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>Agent response with the answer.</returns>
+    public async Task<AgentResponse> QueryAsync(string query, string? context, CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(query);
 
@@ -90,8 +102,13 @@ public sealed class FootballAgentService
             // Create a new thread for this conversation
             var thread = _agent.GetNewThread();
 
+            // Build the full query with context if provided
+            var fullQuery = string.IsNullOrWhiteSpace(context)
+                ? query
+                : $"Context: {context}\n\nQuestion: {query}";
+
             // Run the agent with the user's query
-            var response = await _agent.RunAsync(query, thread, cancellationToken: cancellationToken)
+            var response = await _agent.RunAsync(fullQuery, thread, cancellationToken: cancellationToken)
                 .ConfigureAwait(false);
 
             stopwatch.Stop();

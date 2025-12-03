@@ -17,6 +17,16 @@ namespace DotMatchLens.Predictions.Tools;
 /// </summary>
 public sealed class FootballDataTools
 {
+    /// <summary>
+    /// Default similarity score for text-based fallback searches when vector search is unavailable.
+    /// </summary>
+    private const float FallbackTextSearchSimilarityScore = 0.5f;
+
+    /// <summary>
+    /// Estimated number of days per matchday for rough matchday calculations.
+    /// </summary>
+    private const int EstimatedDaysPerMatchday = 7;
+
     private readonly FootballDbContext _context;
     private readonly VectorEmbeddingService _embeddingService;
     private readonly ILogger<FootballDataTools> _logger;
@@ -131,7 +141,7 @@ public sealed class FootballDataTools
                         t.Venue,
                         t.ClubColors,
                         t.Founded,
-                        0.5f))
+                        FallbackTextSearchSimilarityScore))
                     .ToListAsync()
                     .ConfigureAwait(false);
 
@@ -257,7 +267,7 @@ public sealed class FootballDataTools
                         c.Code,
                         c.Type,
                         c.AreaName,
-                        0.5f))
+                        FallbackTextSearchSimilarityScore))
                     .ToListAsync()
                     .ConfigureAwait(false);
 
@@ -311,7 +321,7 @@ public sealed class FootballDataTools
         var isCompleted = today > season.EndDate || !string.IsNullOrEmpty(season.WinnerName);
         var daysRemaining = isCompleted ? 0 : Math.Max(0, season.EndDate.DayNumber - today.DayNumber);
         var totalDays = season.EndDate.DayNumber - season.StartDate.DayNumber;
-        var totalMatchdays = totalDays / 7; // Rough estimate
+        var totalMatchdays = totalDays / EstimatedDaysPerMatchday; // Rough estimate based on typical weekly scheduling
 
         return new SeasonStatisticsResult(
             season.ExternalId,

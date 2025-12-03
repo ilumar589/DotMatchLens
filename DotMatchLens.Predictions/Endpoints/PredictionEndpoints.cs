@@ -1,7 +1,9 @@
+using DotMatchLens.Data.Context;
 using DotMatchLens.Predictions.Agents;
 using DotMatchLens.Predictions.Models;
 using DotMatchLens.Predictions.Services;
 using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.EntityFrameworkCore;
 
 namespace DotMatchLens.Predictions.Endpoints;
 
@@ -68,10 +70,28 @@ public static class PredictionEndpoints
     private static async Task<Ok<AgentResponse>> QueryAgentAsync(
         QueryAgentRequest request,
         FootballAgentService agentService,
+        FootballDbContext context,
         CancellationToken cancellationToken = default)
     {
+        // Build match context if MatchId is provided
+        string? matchContext = null;
+        if (request.MatchId.HasValue)
+        {
+            var match = await context.Matches
+                .AsNoTracking()
+                .Include(m => m.HomeTeam)
+                .Include(m => m.AwayTeam)
+                .FirstOrDefaultAsync(m => m.Id == request.MatchId.Value, cancellationToken)
+                .ConfigureAwait(false);
+
+            if (match is not null)
+            {
+                matchContext = $"Match: {match.HomeTeam?.Name ?? "Unknown"} vs {match.AwayTeam?.Name ?? "Unknown"} on {match.MatchDate:yyyy-MM-dd}";
+            }
+        }
+
         // Use FootballAgentService with Microsoft Agent Framework instead of custom implementation
-        var response = await agentService.QueryAsync(request.Query, cancellationToken)
+        var response = await agentService.QueryAsync(request.Query, matchContext, cancellationToken)
             .ConfigureAwait(false);
         return TypedResults.Ok(response);
     }
