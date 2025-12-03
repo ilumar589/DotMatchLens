@@ -15,7 +15,7 @@ builder.Services.AddProblemDetails();
 
 // Add modules
 builder.Services.AddFootballModule(builder.Configuration);
-builder.Services.AddPredictionsModule();
+builder.Services.AddPredictionsModule(builder.Configuration);
 
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();

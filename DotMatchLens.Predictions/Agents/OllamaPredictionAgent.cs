@@ -15,9 +15,9 @@ public sealed class OllamaAgentOptions
     public const string SectionName = "OllamaAgent";
 
     /// <summary>
-    /// The Ollama endpoint URL.
+    /// The Ollama endpoint URL (OpenAI-compatible endpoint).
     /// </summary>
-    public string Endpoint { get; set; } = "http://localhost:11434";
+    public string Endpoint { get; set; } = "http://localhost:11434/v1";
 
     /// <summary>
     /// The model to use for predictions.
@@ -28,6 +28,11 @@ public sealed class OllamaAgentOptions
     /// The embedding model to use.
     /// </summary>
     public string EmbeddingModel { get; set; } = "nomic-embed-text";
+
+    /// <summary>
+    /// The API key for authentication (can be any value for Ollama).
+    /// </summary>
+    public string ApiKey { get; set; } = "ollama";
 }
 
 /// <summary>
