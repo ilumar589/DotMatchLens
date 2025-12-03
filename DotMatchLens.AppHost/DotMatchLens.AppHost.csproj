@@ -1,0 +1,16 @@
+<Project Sdk="Aspire.AppHost.Sdk/13.0.1">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <UserSecretsId>d8eca485-e585-4e38-a3f7-a96faa862bc8</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\DotMatchLens.ApiService\DotMatchLens.ApiService.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Aspire.Hosting.PostgreSQL" Version="13.0.1" />
+  </ItemGroup>
+
+</Project>
