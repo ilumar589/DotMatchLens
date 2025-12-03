@@ -1,0 +1,129 @@
+# Build results
+bin/
+obj/
+out/
+[Bb]uild/
+[Ll]og/
+[Ll]ogs/
+
+# Visual Studio files
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Rider
+.idea/
+
+# User-specific files
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Mono Auto Generated Files
+mono_crash.*
+
+# NuGet
+*.nupkg
+*.snupkg
+**/[Pp]ackages/*
+!**/[Pp]ackages/build/
+!**/[Pp]ackages/repositories.config
+nuget.exe
+*.nuget.props
+*.nuget.targets
+
+# Windows Thumbnail Cache
+Thumbs.db
+ehthumbs.db
+
+# Folder config file
+Desktop.ini
+
+# Recycle Bin
+$RECYCLE.BIN/
+
+# Mac desktop services
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows shortcuts
+*.lnk
+
+# Vim
+*.swp
+*.swo
+*~
+
+# dotenv files
+.env
+.env.*
+
+# Local History
+.localhistory/
+
+# BenchmarkDotNet Artifacts
+BenchmarkDotNet.Artifacts/
+
+# .NET Core
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+# StyleCop
+StyleCopReport.xml
+
+# Files built by Visual Studio
+*_i.c
+*_p.c
+*_h.h
+*.ilk
+*.meta
+*.obj
+*.iobj
+*.pch
+*.pdb
+*.ipdb
+*.pgc
+*.pgd
+*.rsp
+*.sbr
+*.tlb
+*.tli
+*.tlh
+*.tmp
+*.tmp_proj
+*_wpftmp.csproj
+*.log
+*.vspscc
+*.vssscc
+.builds
+*.pidb
+*.svclog
+*.scc
+
+# JetBrains Rider
+*.sln.iml
+
+# Publish folder
+publish/
+
+# Test Results
+TestResults/
+[Tt]est[Rr]esult*/
+*.trx
+coverage.*
+*.coverage
+*.coveragexml
+
+# Secrets
+secrets.json
+appsettings.Development.json
+
+# Containers
+docker-compose.dcproj
+docker-compose.override.yml
+.docker/

@@ -1,0 +1,16 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\DotMatchLens.Core\DotMatchLens.Core.csproj" />
+    <ProjectReference Include="..\DotMatchLens.Data\DotMatchLens.Data.csproj" />
+  </ItemGroup>
+
+</Project>
