@@ -1,4 +1,7 @@
 using DotMatchLens.Data.Context;
+using DotMatchLens.Data.HealthChecks;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Hosting;
 
 namespace DotMatchLens.Data.Extensions;
@@ -29,6 +32,14 @@ public static class DataServiceExtensions
                 npgsqlOptions.UseVector();
             });
         });
+
+        // Register database health check
+        builder.Services.AddHealthChecks()
+            .AddCheck<DatabaseHealthCheck>(
+                "database",
+                failureStatus: HealthStatus.Unhealthy,
+                tags: ["ready", "db"],
+                timeout: TimeSpan.FromSeconds(5));
 
         return builder;
     }

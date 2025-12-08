@@ -1,7 +1,9 @@
 using DotMatchLens.Predictions.Agents;
 using DotMatchLens.Predictions.Endpoints;
+using DotMatchLens.Predictions.HealthChecks;
 using DotMatchLens.Predictions.Services;
 using DotMatchLens.Predictions.Tools;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 
 namespace DotMatchLens.Predictions;
 
@@ -47,6 +49,14 @@ public static class PredictionsModuleExtensions
 
         // Register FootballAgentService using Microsoft Agent Framework
         services.AddScoped<FootballAgentService>();
+
+        // Register Ollama health check (degraded if unavailable - predictions still partially work)
+        services.AddHealthChecks()
+            .AddCheck<OllamaHealthCheck>(
+                "ollama",
+                failureStatus: HealthStatus.Degraded,
+                tags: ["ready", "ai"],
+                timeout: TimeSpan.FromSeconds(5));
 
         return services;
     }

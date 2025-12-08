@@ -1,5 +1,7 @@
+using System.Text.Json;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Logging;
@@ -16,7 +18,14 @@ namespace Microsoft.Extensions.Hosting;
 public static class ServiceDefaultsExtensions
 {
     private const string HealthEndpointPath = "/health";
-    private const string AlivenessEndpointPath = "/alive";
+    private const string LivenessEndpointPath = "/alive";
+    private const string ReadinessEndpointPath = "/ready";
+
+    private static readonly JsonSerializerOptions JsonOptions = new()
+    {
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+        WriteIndented = true
+    };
 
     public static TBuilder AddServiceDefaults<TBuilder>(this TBuilder builder) where TBuilder : IHostApplicationBuilder
     {
@@ -66,7 +75,8 @@ public static class ServiceDefaultsExtensions
                         // Exclude health check requests from tracing
                         tracing.Filter = context =>
                             !context.Request.Path.StartsWithSegments(HealthEndpointPath, StringComparison.OrdinalIgnoreCase)
-                            && !context.Request.Path.StartsWithSegments(AlivenessEndpointPath, StringComparison.OrdinalIgnoreCase)
+                            && !context.Request.Path.StartsWithSegments(LivenessEndpointPath, StringComparison.OrdinalIgnoreCase)
+                            && !context.Request.Path.StartsWithSegments(ReadinessEndpointPath, StringComparison.OrdinalIgnoreCase)
                     )
                     // Uncomment the following line to enable gRPC instrumentation (requires the OpenTelemetry.Instrumentation.GrpcNetClient package)
                     //.AddGrpcClientInstrumentation()
@@ -115,15 +125,52 @@ public static class ServiceDefaultsExtensions
         if (app.Environment.IsDevelopment())
         {
             // All health checks must pass for app to be considered ready to accept traffic after starting
-            app.MapHealthChecks(HealthEndpointPath);
+            app.MapHealthChecks(HealthEndpointPath, new HealthCheckOptions
+            {
+                ResponseWriter = WriteDetailedHealthResponse
+            });
 
             // Only health checks tagged with the "live" tag must pass for app to be considered alive
-            app.MapHealthChecks(AlivenessEndpointPath, new HealthCheckOptions
+            app.MapHealthChecks(LivenessEndpointPath, new HealthCheckOptions
             {
-                Predicate = r => r.Tags.Contains("live")
+                Predicate = r => r.Tags.Contains("live"),
+                ResponseWriter = WriteDetailedHealthResponse
+            });
+
+            // Only health checks tagged with the "ready" tag must pass for app to be considered ready
+            app.MapHealthChecks(ReadinessEndpointPath, new HealthCheckOptions
+            {
+                Predicate = r => r.Tags.Contains("ready"),
+                ResponseWriter = WriteDetailedHealthResponse
             });
         }
 
         return app;
+    }
+
+    /// <summary>
+    /// Writes a detailed JSON health check response including status, duration, and individual check results.
+    /// </summary>
+    private static async Task WriteDetailedHealthResponse(HttpContext context, HealthReport report)
+    {
+        context.Response.ContentType = "application/json";
+
+        var response = new
+        {
+            status = report.Status.ToString(),
+            totalDuration = $"{report.TotalDuration.TotalMilliseconds:F2}ms",
+            checks = report.Entries.Select(entry => new
+            {
+                name = entry.Key,
+                status = entry.Value.Status.ToString(),
+                description = entry.Value.Description,
+                duration = $"{entry.Value.Duration.TotalMilliseconds:F2}ms",
+                tags = entry.Value.Tags,
+                data = entry.Value.Data.Count > 0 ? entry.Value.Data : null,
+                exception = entry.Value.Exception?.Message
+            })
+        };
+
+        await context.Response.WriteAsync(JsonSerializer.Serialize(response, JsonOptions));
     }
 }

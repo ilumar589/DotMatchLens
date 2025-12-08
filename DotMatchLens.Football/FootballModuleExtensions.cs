@@ -1,5 +1,7 @@
 using DotMatchLens.Football.Endpoints;
+using DotMatchLens.Football.HealthChecks;
 using DotMatchLens.Football.Services;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 
 namespace DotMatchLens.Football;
 
@@ -35,6 +37,14 @@ public static class FootballModuleExtensions
                 client.DefaultRequestHeaders.Add("X-Auth-Token", options.ApiToken);
             }
         });
+
+        // Register Football Data API health check (degraded if unavailable - non-critical for basic operations)
+        services.AddHealthChecks()
+            .AddCheck<FootballDataApiHealthCheck>(
+                "football-api",
+                failureStatus: HealthStatus.Degraded,
+                tags: ["ready", "external"],
+                timeout: TimeSpan.FromSeconds(10));
 
         return services;
     }

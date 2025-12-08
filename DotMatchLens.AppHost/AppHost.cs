@@ -7,7 +7,7 @@ var postgres = builder.AddPostgres("postgres")
 var footballDb = postgres.AddDatabase("footballdb");
 
 var apiService = builder.AddProject<Projects.DotMatchLens_ApiService>("apiservice")
-    .WithHttpHealthCheck("/health")
+    .WithHttpHealthCheck("/ready")
     .WithReference(footballDb)
     .WaitFor(footballDb);
 
