@@ -5,6 +5,7 @@ namespace DotMatchLens.Predictions.HealthChecks;
 
 /// <summary>
 /// Health check for the Ollama AI service connectivity.
+/// Returns Degraded instead of failing since AI is a non-critical service.
 /// </summary>
 public sealed class OllamaHealthCheck : IHealthCheck
 {
@@ -27,11 +28,15 @@ public sealed class OllamaHealthCheck : IHealthCheck
         {
             var client = _httpClientFactory.CreateClient("Ollama");
             client.BaseAddress = new Uri(_options.Endpoint);
-            client.Timeout = TimeSpan.FromSeconds(5);
+            client.Timeout = TimeSpan.FromSeconds(3);
+
+            // Use a short timeout for health check
+            using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            timeoutCts.CancelAfter(TimeSpan.FromSeconds(3));
 
             // Check Ollama API availability by listing models
             var requestUri = new Uri("/api/tags", UriKind.Relative);
-            var response = await client.GetAsync(requestUri, cancellationToken);
+            var response = await client.GetAsync(requestUri, timeoutCts.Token);
 
             if (response.IsSuccessStatusCode)
             {
@@ -52,7 +57,7 @@ public sealed class OllamaHealthCheck : IHealthCheck
                     ["Endpoint"] = _options.Endpoint
                 });
         }
-        catch (TaskCanceledException)
+        catch (OperationCanceledException)
         {
             return HealthCheckResult.Degraded(
                 "Ollama service request timed out.",
@@ -64,7 +69,7 @@ public sealed class OllamaHealthCheck : IHealthCheck
         catch (HttpRequestException)
         {
             return HealthCheckResult.Degraded(
-                "Cannot connect to Ollama service.",
+                "Cannot connect to Ollama service - service may not be running.",
                 data: new Dictionary<string, object>
                 {
                     ["Endpoint"] = _options.Endpoint

@@ -5,14 +5,15 @@ namespace DotMatchLens.Football.HealthChecks;
 
 /// <summary>
 /// Health check for the football-data.org API connectivity.
+/// Returns Degraded instead of failing on errors since this is a non-critical external service.
 /// </summary>
 public sealed class FootballDataApiHealthCheck : IHealthCheck
 {
-    private readonly FootballDataApiClient _apiClient;
+    private readonly IServiceProvider _serviceProvider;
 
-    public FootballDataApiHealthCheck(FootballDataApiClient apiClient)
+    public FootballDataApiHealthCheck(IServiceProvider serviceProvider)
     {
-        _apiClient = apiClient;
+        _serviceProvider = serviceProvider;
     }
 
     public async Task<HealthCheckResult> CheckHealthAsync(
@@ -21,9 +22,25 @@ public sealed class FootballDataApiHealthCheck : IHealthCheck
     {
         try
         {
-            // Use a lightweight API call to check connectivity
-            // GetCompetitionAsync returns null on errors, so we check for that
-            var result = await _apiClient.GetCompetitionAsync("PL", cancellationToken);
+            // Create a scope to resolve the scoped FootballDataApiClient
+            using var scope = _serviceProvider.CreateScope();
+            var apiClient = scope.ServiceProvider.GetService<FootballDataApiClient>();
+
+            if (apiClient is null)
+            {
+                return HealthCheckResult.Degraded(
+                    "Football Data API client not configured.",
+                    data: new Dictionary<string, object>
+                    {
+                        ["Provider"] = "football-data.org"
+                    });
+            }
+
+            // Use a short timeout for health check
+            using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            timeoutCts.CancelAfter(TimeSpan.FromSeconds(5));
+
+            var result = await apiClient.GetCompetitionAsync("PL", timeoutCts.Token);
 
             if (result is not null)
             {
@@ -35,7 +52,6 @@ public sealed class FootballDataApiHealthCheck : IHealthCheck
                     });
             }
 
-            // If result is null, the API had an error (logged by the client)
             return HealthCheckResult.Degraded(
                 "Football Data API returned an error or is unavailable.",
                 data: new Dictionary<string, object>
@@ -43,7 +59,7 @@ public sealed class FootballDataApiHealthCheck : IHealthCheck
                     ["Provider"] = "football-data.org"
                 });
         }
-        catch (TaskCanceledException)
+        catch (OperationCanceledException)
         {
             return HealthCheckResult.Degraded(
                 "Football Data API request timed out.",

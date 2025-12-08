@@ -8,11 +8,11 @@ namespace DotMatchLens.Data.HealthChecks;
 /// </summary>
 public sealed class DatabaseHealthCheck : IHealthCheck
 {
-    private readonly FootballDbContext _context;
+    private readonly IServiceProvider _serviceProvider;
 
-    public DatabaseHealthCheck(FootballDbContext context)
+    public DatabaseHealthCheck(IServiceProvider serviceProvider)
     {
-        _context = context;
+        _serviceProvider = serviceProvider;
     }
 
     public async Task<HealthCheckResult> CheckHealthAsync(
@@ -21,12 +21,38 @@ public sealed class DatabaseHealthCheck : IHealthCheck
     {
         try
         {
-            // Simple connectivity check using EF Core
-            var canConnect = await _context.Database.CanConnectAsync(cancellationToken);
+            // Create a scope to resolve the scoped DbContext
+            using var scope = _serviceProvider.CreateScope();
+            var dbContext = scope.ServiceProvider.GetService<FootballDbContext>();
+
+            if (dbContext is null)
+            {
+                return HealthCheckResult.Unhealthy(
+                    "Database context not configured.",
+                    data: new Dictionary<string, object>
+                    {
+                        ["Provider"] = "PostgreSQL"
+                    });
+            }
+
+            // Use a short timeout for health check
+            using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            timeoutCts.CancelAfter(TimeSpan.FromSeconds(3));
+
+            var canConnect = await dbContext.Database.CanConnectAsync(timeoutCts.Token);
 
             return canConnect
                 ? HealthCheckResult.Healthy("Database connection is healthy.")
                 : HealthCheckResult.Unhealthy("Cannot connect to database.");
+        }
+        catch (OperationCanceledException)
+        {
+            return HealthCheckResult.Unhealthy(
+                "Database connection timed out.",
+                data: new Dictionary<string, object>
+                {
+                    ["Provider"] = "PostgreSQL"
+                });
         }
         catch (Exception ex)
         {
