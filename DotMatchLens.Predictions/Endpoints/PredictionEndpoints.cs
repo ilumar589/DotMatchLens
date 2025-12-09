@@ -34,6 +34,15 @@ public static class PredictionEndpoints
             .WithName("QueryAgent")
             .WithDescription("Query the AI agent with a custom question using Microsoft Agent Framework");
 
+        // Workflow-based prediction endpoints
+        group.MapPost("/workflow/match/{matchId:guid}", TriggerMatchPredictionWorkflowAsync)
+            .WithName("TriggerMatchPredictionWorkflow")
+            .WithDescription("Trigger a match prediction using workflow orchestration via MassTransit");
+
+        group.MapPost("/workflow/batch", TriggerBatchPredictionWorkflowAsync)
+            .WithName("TriggerBatchPredictionWorkflow")
+            .WithDescription("Trigger batch predictions for multiple matches");
+
         return endpoints;
     }
 
@@ -48,7 +57,7 @@ public static class PredictionEndpoints
                 request.MatchId,
                 request.AdditionalContext,
                 cancellationToken)
-                .ConfigureAwait(false);
+                ;
             return TypedResults.Created($"/api/predictions/match/{prediction.MatchId}", prediction);
         }
         catch (InvalidOperationException ex)
@@ -63,7 +72,7 @@ public static class PredictionEndpoints
         CancellationToken cancellationToken = default)
     {
         var predictions = await service.GetPredictionsForMatchAsync(matchId, cancellationToken)
-            .ConfigureAwait(false);
+            ;
         return TypedResults.Ok(predictions);
     }
 
@@ -82,7 +91,7 @@ public static class PredictionEndpoints
                 .Include(m => m.HomeTeam)
                 .Include(m => m.AwayTeam)
                 .FirstOrDefaultAsync(m => m.Id == request.MatchId.Value, cancellationToken)
-                .ConfigureAwait(false);
+                ;
 
             if (match is not null)
             {
@@ -92,8 +101,66 @@ public static class PredictionEndpoints
 
         // Use FootballAgentService with Microsoft Agent Framework instead of custom implementation
         var response = await agentService.QueryAsync(request.Query, matchContext, cancellationToken)
-            .ConfigureAwait(false);
+            ;
         return TypedResults.Ok(response);
+    }
+
+    private static async Task<Results<Accepted<WorkflowTriggerResponse>, NotFound<ErrorResponse>>> TriggerMatchPredictionWorkflowAsync(
+        Guid matchId,
+        MassTransit.IPublishEndpoint publishEndpoint,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var correlationId = Guid.NewGuid();
+
+            await publishEndpoint.Publish(new DotMatchLens.Core.Contracts.MatchPredictionRequested
+            {
+                MatchId = matchId,
+                CorrelationId = correlationId,
+                AdditionalContext = null
+            }, cancellationToken);
+
+            return TypedResults.Accepted(
+                $"/api/predictions/{correlationId}/status",
+                new WorkflowTriggerResponse(correlationId, matchId, "Match prediction workflow triggered"));
+        }
+        catch (Exception ex)
+        {
+            return TypedResults.NotFound(new ErrorResponse($"Failed to trigger workflow: {ex.Message}"));
+        }
+    }
+
+    private static async Task<Results<Accepted<BatchWorkflowTriggerResponse>, BadRequest<ErrorResponse>>> TriggerBatchPredictionWorkflowAsync(
+        BatchPredictionRequest request,
+        MassTransit.IPublishEndpoint publishEndpoint,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var correlationIds = new List<Guid>();
+
+            foreach (var matchId in request.MatchIds)
+            {
+                var correlationId = Guid.NewGuid();
+                correlationIds.Add(correlationId);
+
+                await publishEndpoint.Publish(new DotMatchLens.Core.Contracts.MatchPredictionRequested
+                {
+                    MatchId = matchId,
+                    CorrelationId = correlationId,
+                    AdditionalContext = null
+                }, cancellationToken);
+            }
+
+            return TypedResults.Accepted(
+                "/api/predictions/batch/status",
+                new BatchWorkflowTriggerResponse(correlationIds.AsReadOnly(), request.MatchIds.Count, "Batch prediction workflows triggered"));
+        }
+        catch (Exception ex)
+        {
+            return TypedResults.BadRequest(new ErrorResponse($"Failed to trigger batch workflow: {ex.Message}"));
+        }
     }
 }
 
@@ -101,3 +168,18 @@ public static class PredictionEndpoints
 /// Error response model.
 /// </summary>
 public sealed record ErrorResponse(string Error);
+
+/// <summary>
+/// Workflow trigger response.
+/// </summary>
+public sealed record WorkflowTriggerResponse(Guid CorrelationId, Guid MatchId, string Message);
+
+/// <summary>
+/// Batch workflow trigger response.
+/// </summary>
+public sealed record BatchWorkflowTriggerResponse(IReadOnlyList<Guid> CorrelationIds, int Count, string Message);
+
+/// <summary>
+/// Batch prediction request.
+/// </summary>
+public sealed record BatchPredictionRequest(IReadOnlyList<Guid> MatchIds);

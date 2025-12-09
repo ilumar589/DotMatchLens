@@ -109,7 +109,7 @@ public sealed class FootballAgentService
 
             // Run the agent with the user's query
             var response = await _agent.RunAsync(fullQuery, thread, cancellationToken: cancellationToken)
-                .ConfigureAwait(false);
+                ;
 
             stopwatch.Stop();
             PredictionLogMessages.LogAgentResponseReceived(_logger, stopwatch.ElapsedMilliseconds);

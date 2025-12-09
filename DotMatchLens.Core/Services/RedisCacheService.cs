@@ -39,7 +39,7 @@ public sealed class RedisCacheService : ICacheService
 
         try
         {
-            var value = await _database.StringGetAsync(key).ConfigureAwait(false);
+            var value = await _database.StringGetAsync(key);
             
             if (value.IsNullOrEmpty)
             {
@@ -75,7 +75,7 @@ public sealed class RedisCacheService : ICacheService
         try
         {
             var json = JsonSerializer.Serialize(value, JsonOptions);
-            await _database.StringSetAsync(key, json, expiration).ConfigureAwait(false);
+            await _database.StringSetAsync(key, json, expiration);
             CacheLogMessages.LogCacheSet(_logger, key, expiration.TotalSeconds);
         }
         catch (Exception ex)
@@ -91,7 +91,7 @@ public sealed class RedisCacheService : ICacheService
 
         try
         {
-            await _database.KeyDeleteAsync(key).ConfigureAwait(false);
+            await _database.KeyDeleteAsync(key);
             CacheLogMessages.LogCacheRemoved(_logger, key);
         }
         catch (Exception ex)
@@ -107,7 +107,7 @@ public sealed class RedisCacheService : ICacheService
 
         try
         {
-            return await _database.KeyExistsAsync(key).ConfigureAwait(false);
+            return await _database.KeyExistsAsync(key);
         }
         catch (Exception ex)
         {

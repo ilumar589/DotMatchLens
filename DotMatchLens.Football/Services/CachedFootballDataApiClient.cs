@@ -32,7 +32,7 @@ public sealed class CachedFootballDataApiClient
 
         // 1. Check cache first
         var cachedData = await _cacheService.GetAsync<CachedCompetitionResponse>(cacheKey, cancellationToken)
-            .ConfigureAwait(false);
+            ;
 
         if (cachedData is not null)
         {
@@ -41,13 +41,13 @@ public sealed class CachedFootballDataApiClient
 
         // 2. Cache miss - call API
         var apiData = await _apiClient.GetCompetitionAsync(competitionCode, cancellationToken)
-            .ConfigureAwait(false);
+            ;
 
         // 3. Store in cache if successful
         if (apiData is not null)
         {
             await _cacheService.SetAsync(cacheKey, new CachedCompetitionResponse { Data = apiData.Value }, cancellationToken)
-                .ConfigureAwait(false);
+                ;
         }
 
         return apiData;
@@ -66,7 +66,7 @@ public sealed class CachedFootballDataApiClient
 
         // 1. Check cache first
         var cachedData = await _cacheService.GetAsync<CachedString>(cacheKey, cancellationToken)
-            .ConfigureAwait(false);
+            ;
 
         if (cachedData is not null)
         {
@@ -75,13 +75,13 @@ public sealed class CachedFootballDataApiClient
 
         // 2. Cache miss - call API
         var apiData = await _apiClient.GetCompetitionRawJsonAsync(competitionCode, cancellationToken)
-            .ConfigureAwait(false);
+            ;
 
         // 3. Store in cache if successful
         if (apiData is not null)
         {
             await _cacheService.SetAsync(cacheKey, new CachedString { Value = apiData }, cancellationToken)
-                .ConfigureAwait(false);
+                ;
         }
 
         return apiData;
@@ -97,9 +97,9 @@ public sealed class CachedFootballDataApiClient
         ArgumentException.ThrowIfNullOrWhiteSpace(competitionCode);
 
         await _cacheService.RemoveAsync(GenerateCacheKey("competition", competitionCode), cancellationToken)
-            .ConfigureAwait(false);
+            ;
         await _cacheService.RemoveAsync(GenerateCacheKey("competition-raw", competitionCode), cancellationToken)
-            .ConfigureAwait(false);
+            ;
     }
 
     /// <summary>

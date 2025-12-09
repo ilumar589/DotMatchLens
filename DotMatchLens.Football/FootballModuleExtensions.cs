@@ -1,5 +1,8 @@
+using DotMatchLens.Core.Services;
+using DotMatchLens.Football.Consumers;
 using DotMatchLens.Football.Endpoints;
 using DotMatchLens.Football.Services;
+using MassTransit;
 
 namespace DotMatchLens.Football;
 
@@ -19,6 +22,9 @@ public static class FootballModuleExtensions
         // Register services
         services.AddScoped<FootballService>();
         services.AddScoped<FootballDataIngestionService>();
+        
+        // Register embedding service (pgvector-based, no LLM required)
+        services.AddScoped<IEmbeddingService, PgVectorEmbeddingService>();
 
         // Configure and register HTTP client for football-data.org API
         var options = configuration.GetSection(FootballDataApiOptions.SectionName).Get<FootballDataApiOptions>()
@@ -38,6 +44,9 @@ public static class FootballModuleExtensions
 
         // Register the caching decorator for the API client
         services.AddScoped<CachedFootballDataApiClient>();
+
+        // Register MassTransit consumers
+        services.AddScoped<CompetitionSyncConsumer>();
 
         return services;
     }

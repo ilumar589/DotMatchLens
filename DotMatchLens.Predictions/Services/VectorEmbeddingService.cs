@@ -74,7 +74,7 @@ public sealed class VectorEmbeddingService : IEmbeddingService
             var response = await _httpClient.PostAsJsonAsync(
                 new Uri("/api/embeddings", UriKind.Relative),
                 request,
-                cancellationToken).ConfigureAwait(false);
+                cancellationToken);
 
             if (!response.IsSuccessStatusCode)
             {
@@ -84,7 +84,7 @@ public sealed class VectorEmbeddingService : IEmbeddingService
 
             var result = await response.Content
                 .ReadFromJsonAsync<EmbeddingResponse>(JsonOptions, cancellationToken)
-                .ConfigureAwait(false);
+                ;
 
             if (result?.Embedding is null)
             {

@@ -103,7 +103,7 @@ public sealed class OllamaPredictionAgent : IPredictionAgent
 
         try
         {
-            var response = await SendChatRequestAsync(prompt, PredictionSystemPrompt, cancellationToken).ConfigureAwait(false);
+            var response = await SendChatRequestAsync(prompt, PredictionSystemPrompt, cancellationToken);
             stopwatch.Stop();
             PredictionLogMessages.LogAgentResponseReceived(_logger, stopwatch.ElapsedMilliseconds);
 
@@ -112,7 +112,7 @@ public sealed class OllamaPredictionAgent : IPredictionAgent
 
             // Generate embedding for the context
             var contextForEmbedding = $"{homeTeamName} vs {awayTeamName} {matchDate:yyyy-MM-dd} {additionalContext}";
-            var embedding = await GenerateEmbeddingAsync(contextForEmbedding, cancellationToken).ConfigureAwait(false);
+            var embedding = await GenerateEmbeddingAsync(contextForEmbedding, cancellationToken);
 
             return new AgentPredictionResult(
                 prediction.HomeWinProbability,
@@ -161,7 +161,7 @@ public sealed class OllamaPredictionAgent : IPredictionAgent
 
         try
         {
-            var response = await SendChatRequestAsync(fullPrompt, systemPrompt, cancellationToken).ConfigureAwait(false);
+            var response = await SendChatRequestAsync(fullPrompt, systemPrompt, cancellationToken);
             stopwatch.Stop();
             PredictionLogMessages.LogAgentResponseReceived(_logger, stopwatch.ElapsedMilliseconds);
 
@@ -190,10 +190,10 @@ public sealed class OllamaPredictionAgent : IPredictionAgent
             stream = false
         };
 
-        var response = await _httpClient.PostAsJsonAsync("/api/chat", request, cancellationToken).ConfigureAwait(false);
+        var response = await _httpClient.PostAsJsonAsync("/api/chat", request, cancellationToken);
         response.EnsureSuccessStatusCode();
 
-        var result = await response.Content.ReadFromJsonAsync<OllamaChatResponse>(JsonOptions, cancellationToken).ConfigureAwait(false);
+        var result = await response.Content.ReadFromJsonAsync<OllamaChatResponse>(JsonOptions, cancellationToken);
         return result?.Message?.Content ?? string.Empty;
     }
 
@@ -207,14 +207,14 @@ public sealed class OllamaPredictionAgent : IPredictionAgent
                 prompt = text
             };
 
-            var response = await _httpClient.PostAsJsonAsync("/api/embeddings", request, cancellationToken).ConfigureAwait(false);
+            var response = await _httpClient.PostAsJsonAsync("/api/embeddings", request, cancellationToken);
             
             if (!response.IsSuccessStatusCode)
             {
                 return null;
             }
 
-            var result = await response.Content.ReadFromJsonAsync<OllamaEmbeddingResponse>(JsonOptions, cancellationToken).ConfigureAwait(false);
+            var result = await response.Content.ReadFromJsonAsync<OllamaEmbeddingResponse>(JsonOptions, cancellationToken);
             return result?.Embedding is not null ? [.. result.Embedding] : null;
         }
         catch (Exception ex)

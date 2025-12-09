@@ -1,10 +1,10 @@
 using System.Collections.Immutable;
 using System.ComponentModel;
 using System.Text.Json;
+using DotMatchLens.Core.Services;
 using DotMatchLens.Data.Context;
 using DotMatchLens.Predictions.Logging;
 using DotMatchLens.Predictions.Models;
-using DotMatchLens.Predictions.Services;
 using Microsoft.EntityFrameworkCore;
 using Pgvector;
 using Pgvector.EntityFrameworkCore;
@@ -28,7 +28,7 @@ public sealed class FootballDataTools
     private const int EstimatedDaysPerMatchday = 7;
 
     private readonly FootballDbContext _context;
-    private readonly VectorEmbeddingService _embeddingService;
+    private readonly IEmbeddingService _embeddingService;
     private readonly ILogger<FootballDataTools> _logger;
 
     private static readonly JsonSerializerOptions JsonOptions = new()
@@ -39,7 +39,7 @@ public sealed class FootballDataTools
 
     public FootballDataTools(
         FootballDbContext context,
-        VectorEmbeddingService embeddingService,
+        IEmbeddingService embeddingService,
         ILogger<FootballDataTools> logger)
     {
         _context = context;
@@ -66,7 +66,7 @@ public sealed class FootballDataTools
                 .AsNoTracking()
                 .Include(c => c.Seasons)
                 .FirstOrDefaultAsync(c => c.Code == competitionCode)
-                .ConfigureAwait(false);
+                ;
 
             if (competition is null)
             {
@@ -123,7 +123,7 @@ public sealed class FootballDataTools
         {
             // Generate embedding for the search query
             var queryEmbedding = await _embeddingService.GenerateEmbeddingAsync(description)
-                .ConfigureAwait(false);
+                ;
 
             if (!queryEmbedding.HasValue)
             {
@@ -143,7 +143,7 @@ public sealed class FootballDataTools
                         t.Founded,
                         FallbackTextSearchSimilarityScore))
                     .ToListAsync()
-                    .ConfigureAwait(false);
+                    ;
 
                 PredictionLogMessages.LogSimilarTeamsFound(_logger, textResults.Count);
                 PredictionLogMessages.LogToolCompleted(_logger, nameof(FindSimilarTeams));
@@ -169,7 +169,7 @@ public sealed class FootballDataTools
                     Distance = t.Embedding!.CosineDistance(queryVector)
                 })
                 .ToListAsync()
-                .ConfigureAwait(false);
+                ;
 
             var similarTeams = results
                 .Select(r => new SimilarTeamResult(
@@ -211,7 +211,7 @@ public sealed class FootballDataTools
                 .AsNoTracking()
                 .Include(s => s.Competition)
                 .FirstOrDefaultAsync(s => s.ExternalId == seasonId)
-                .ConfigureAwait(false);
+                ;
 
             if (season is null)
             {
@@ -249,7 +249,7 @@ public sealed class FootballDataTools
         {
             // Generate embedding for the search query
             var queryEmbedding = await _embeddingService.GenerateEmbeddingAsync(query)
-                .ConfigureAwait(false);
+                ;
 
             if (!queryEmbedding.HasValue)
             {
@@ -269,7 +269,7 @@ public sealed class FootballDataTools
                         c.AreaName,
                         FallbackTextSearchSimilarityScore))
                     .ToListAsync()
-                    .ConfigureAwait(false);
+                    ;
 
                 PredictionLogMessages.LogToolCompleted(_logger, nameof(SearchCompetitions));
                 return JsonSerializer.Serialize(textResults, JsonOptions);
@@ -293,7 +293,7 @@ public sealed class FootballDataTools
                     Distance = c.Embedding!.CosineDistance(queryVector)
                 })
                 .ToListAsync()
-                .ConfigureAwait(false);
+                ;
 
             var competitions = results
                 .Select(r => new CompetitionSearchResult(

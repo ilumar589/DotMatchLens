@@ -1,8 +1,11 @@
 using DotMatchLens.Core.Services;
 using DotMatchLens.Predictions.Agents;
+using DotMatchLens.Predictions.Consumers;
 using DotMatchLens.Predictions.Endpoints;
+using DotMatchLens.Predictions.Sagas;
 using DotMatchLens.Predictions.Services;
 using DotMatchLens.Predictions.Tools;
+using MassTransit;
 
 namespace DotMatchLens.Predictions;
 
@@ -24,21 +27,15 @@ public static class PredictionsModuleExtensions
             ?? new OllamaAgentOptions();
         services.AddSingleton(ollamaOptions);
 
-        // Register HTTP client for Ollama
+        // Register HTTP client for Ollama (for LLM predictions only, not embeddings)
         services.AddHttpClient("Ollama");
 
         // Register the prediction agent
         services.AddScoped<IPredictionAgent, OllamaPredictionAgent>();
         services.AddScoped<PredictionService>();
 
-        // Register vector embedding service with HTTP client
-        services.AddHttpClient<VectorEmbeddingService>(client =>
-        {
-            client.BaseAddress = new Uri("http://localhost:11434");
-        });
-
-        // Register VectorEmbeddingService as IEmbeddingService
-        services.AddScoped<IEmbeddingService, VectorEmbeddingService>();
+        // Note: IEmbeddingService is registered in Football module
+        // and provided by PgVectorEmbeddingService (no LLM required)
 
         // Register agent tools (legacy individual tools)
         services.AddScoped<GetCompetitionHistoryTool>();
@@ -46,11 +43,20 @@ public static class PredictionsModuleExtensions
         services.AddScoped<SeasonStatisticsTool>();
         services.AddScoped<CompetitionSearchTool>();
 
+        // Register MCP Tools for workflow-based predictions
+        services.AddScoped<GetTeamsTool>();
+        services.AddScoped<GetMatchesTool>();
+        services.AddScoped<SearchSimilarMatchesTool>();
+        services.AddScoped<SavePredictionTool>();
+
         // Register FootballDataTools with AIFunction pattern
         services.AddScoped<FootballDataTools>();
 
         // Register FootballAgentService using Microsoft Agent Framework
         services.AddScoped<FootballAgentService>();
+
+        // Register MassTransit consumers and sagas
+        services.AddScoped<MatchPredictionConsumer>();
 
         return services;
     }
