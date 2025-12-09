@@ -1,3 +1,4 @@
+using DotMatchLens.Core.Services;
 using DotMatchLens.Football.Endpoints;
 using DotMatchLens.Football.Services;
 
@@ -19,6 +20,9 @@ public static class FootballModuleExtensions
         // Register services
         services.AddScoped<FootballService>();
         services.AddScoped<FootballDataIngestionService>();
+        
+        // Register embedding service (pgvector-based, no LLM required)
+        services.AddScoped<IEmbeddingService, PgVectorEmbeddingService>();
 
         // Configure and register HTTP client for football-data.org API
         var options = configuration.GetSection(FootballDataApiOptions.SectionName).Get<FootballDataApiOptions>()

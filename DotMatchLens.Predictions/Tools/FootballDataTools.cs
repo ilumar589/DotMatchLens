@@ -1,10 +1,10 @@
 using System.Collections.Immutable;
 using System.ComponentModel;
 using System.Text.Json;
+using DotMatchLens.Core.Services;
 using DotMatchLens.Data.Context;
 using DotMatchLens.Predictions.Logging;
 using DotMatchLens.Predictions.Models;
-using DotMatchLens.Predictions.Services;
 using Microsoft.EntityFrameworkCore;
 using Pgvector;
 using Pgvector.EntityFrameworkCore;
@@ -28,7 +28,7 @@ public sealed class FootballDataTools
     private const int EstimatedDaysPerMatchday = 7;
 
     private readonly FootballDbContext _context;
-    private readonly VectorEmbeddingService _embeddingService;
+    private readonly IEmbeddingService _embeddingService;
     private readonly ILogger<FootballDataTools> _logger;
 
     private static readonly JsonSerializerOptions JsonOptions = new()
@@ -39,7 +39,7 @@ public sealed class FootballDataTools
 
     public FootballDataTools(
         FootballDbContext context,
-        VectorEmbeddingService embeddingService,
+        IEmbeddingService embeddingService,
         ILogger<FootballDataTools> logger)
     {
         _context = context;

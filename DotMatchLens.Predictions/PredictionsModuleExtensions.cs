@@ -24,21 +24,15 @@ public static class PredictionsModuleExtensions
             ?? new OllamaAgentOptions();
         services.AddSingleton(ollamaOptions);
 
-        // Register HTTP client for Ollama
+        // Register HTTP client for Ollama (for LLM predictions only, not embeddings)
         services.AddHttpClient("Ollama");
 
         // Register the prediction agent
         services.AddScoped<IPredictionAgent, OllamaPredictionAgent>();
         services.AddScoped<PredictionService>();
 
-        // Register vector embedding service with HTTP client
-        services.AddHttpClient<VectorEmbeddingService>(client =>
-        {
-            client.BaseAddress = new Uri("http://localhost:11434");
-        });
-
-        // Register VectorEmbeddingService as IEmbeddingService
-        services.AddScoped<IEmbeddingService, VectorEmbeddingService>();
+        // Note: IEmbeddingService is registered in Football module
+        // and provided by PgVectorEmbeddingService (no LLM required)
 
         // Register agent tools (legacy individual tools)
         services.AddScoped<GetCompetitionHistoryTool>();

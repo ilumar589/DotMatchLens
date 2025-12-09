@@ -1,9 +1,11 @@
 using System.Diagnostics;
+using DotMatchLens.Core.Services;
 using DotMatchLens.Data.Context;
 using DotMatchLens.Data.Entities;
 using DotMatchLens.Football.Logging;
 using DotMatchLens.Football.Models;
 using Microsoft.EntityFrameworkCore;
+using Pgvector;
 
 namespace DotMatchLens.Football.Services;
 
@@ -14,11 +16,16 @@ public sealed class FootballService
 {
     private readonly FootballDbContext _context;
     private readonly ILogger<FootballService> _logger;
+    private readonly IEmbeddingService _embeddingService;
 
-    public FootballService(FootballDbContext context, ILogger<FootballService> logger)
+    public FootballService(
+        FootballDbContext context, 
+        ILogger<FootballService> logger,
+        IEmbeddingService embeddingService)
     {
         _context = context;
         _logger = logger;
+        _embeddingService = embeddingService;
     }
 
     /// <summary>
@@ -76,12 +83,28 @@ public sealed class FootballService
     /// </summary>
     public async Task<TeamDto> CreateTeamAsync(string name, string? country = null, string? league = null, CancellationToken cancellationToken = default)
     {
+        // Generate embedding for the team
+        var embedding = await _embeddingService.GenerateTeamEmbeddingAsync(
+            name,
+            null, // venue
+            null, // clubColors
+            null, // founded
+            country,
+            cancellationToken);
+
+        Vector? teamEmbedding = null;
+        if (embedding.HasValue)
+        {
+            teamEmbedding = new Vector(embedding.Value.ToArray());
+        }
+
         var team = new Team
         {
             Id = Guid.NewGuid(),
             Name = name,
             Country = country,
-            League = league
+            League = league,
+            Embedding = teamEmbedding
         };
 
         _context.Teams.Add(team);

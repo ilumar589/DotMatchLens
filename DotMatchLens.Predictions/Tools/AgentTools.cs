@@ -1,8 +1,8 @@
 using System.Collections.Immutable;
+using DotMatchLens.Core.Services;
 using DotMatchLens.Data.Context;
 using DotMatchLens.Predictions.Logging;
 using DotMatchLens.Predictions.Models;
-using DotMatchLens.Predictions.Services;
 using Microsoft.EntityFrameworkCore;
 using Pgvector;
 using Pgvector.EntityFrameworkCore;
@@ -87,12 +87,12 @@ public sealed class GetCompetitionHistoryTool
 public sealed class FindSimilarTeamsTool
 {
     private readonly FootballDbContext _context;
-    private readonly VectorEmbeddingService _embeddingService;
+    private readonly IEmbeddingService _embeddingService;
     private readonly ILogger<FindSimilarTeamsTool> _logger;
 
     public FindSimilarTeamsTool(
         FootballDbContext context,
-        VectorEmbeddingService embeddingService,
+        IEmbeddingService embeddingService,
         ILogger<FindSimilarTeamsTool> logger)
     {
         _context = context;
@@ -299,12 +299,12 @@ public sealed class SeasonStatisticsTool
 public sealed class CompetitionSearchTool
 {
     private readonly FootballDbContext _context;
-    private readonly VectorEmbeddingService _embeddingService;
+    private readonly IEmbeddingService _embeddingService;
     private readonly ILogger<CompetitionSearchTool> _logger;
 
     public CompetitionSearchTool(
         FootballDbContext context,
-        VectorEmbeddingService embeddingService,
+        IEmbeddingService embeddingService,
         ILogger<CompetitionSearchTool> logger)
     {
         _context = context;
