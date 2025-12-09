@@ -10,11 +10,19 @@ var footballDb = postgres.AddDatabase("footballdb");
 var redis = builder.AddRedis("redis")
     .WithDataVolume();
 
+// Add Ollama container for LLM predictions (not used for embeddings)
+var ollama = builder.AddContainer("ollama", "ollama/ollama")
+    .WithHttpEndpoint(port: 11434, targetPort: 11434, name: "ollama")
+    .WithVolume("ollama-data", "/root/.ollama")
+    .WithEnvironment("OLLAMA_HOST", "0.0.0.0");
+
 var apiService = builder.AddProject<Projects.DotMatchLens_ApiService>("apiservice")
     .WithHttpHealthCheck("/health")
     .WithReference(footballDb)
     .WithReference(redis)
+    .WithEnvironment("OllamaAgent__Endpoint", ollama.GetEndpoint("ollama"))
     .WaitFor(footballDb)
-    .WaitFor(redis);
+    .WaitFor(redis)
+    .WaitFor(ollama);
 
 builder.Build().Run();
