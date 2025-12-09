@@ -17,6 +17,7 @@ public static class WorkflowVisualizationEndpoints
     {
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase
     };
+
     /// <summary>
     /// Maps workflow visualization endpoints.
     /// </summary>
