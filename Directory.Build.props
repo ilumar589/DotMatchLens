@@ -11,4 +11,11 @@
     <!-- CA1515: Public types need sealed/abstract, IDE0300/305: Collection expressions, CA1031: Catch all exceptions, CA1812: Avoid uninstantiated internal classes, CA1861: Constant arrays, CA2007: ConfigureAwait (not needed in app code) -->
     <NoWarn>$(NoWarn);CA1515;IDE0300;IDE0305;CA1031;CA1812;CA1861;CA2007</NoWarn>
   </PropertyGroup>
+
+  <!-- Centralize EF Core version to resolve conflicts -->
+  <ItemGroup>
+    <PackageReference Update="Microsoft.EntityFrameworkCore" Version="10.0.1" />
+    <PackageReference Update="Microsoft.EntityFrameworkCore.Abstractions" Version="10.0.1" />
+    <PackageReference Update="Microsoft.EntityFrameworkCore.Relational" Version="10.0.1" />
+  </ItemGroup>
 </Project>

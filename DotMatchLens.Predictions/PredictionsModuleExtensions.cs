@@ -1,3 +1,4 @@
+using DotMatchLens.Core.Services;
 using DotMatchLens.Predictions.Agents;
 using DotMatchLens.Predictions.Endpoints;
 using DotMatchLens.Predictions.Services;
@@ -35,6 +36,9 @@ public static class PredictionsModuleExtensions
         {
             client.BaseAddress = new Uri("http://localhost:11434");
         });
+
+        // Register VectorEmbeddingService as IEmbeddingService
+        services.AddScoped<IEmbeddingService, VectorEmbeddingService>();
 
         // Register agent tools (legacy individual tools)
         services.AddScoped<GetCompetitionHistoryTool>();

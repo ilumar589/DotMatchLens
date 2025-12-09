@@ -36,6 +36,9 @@ public static class FootballModuleExtensions
             }
         });
 
+        // Register the caching decorator for the API client
+        services.AddScoped<CachedFootballDataApiClient>();
+
         return services;
     }
 

@@ -1,3 +1,4 @@
+using DotMatchLens.Core.Services;
 using DotMatchLens.Data.Extensions;
 using DotMatchLens.Football;
 using DotMatchLens.Predictions;
@@ -9,6 +10,15 @@ builder.AddServiceDefaults();
 
 // Add database
 builder.AddFootballDatabase();
+
+// Add database migrations
+builder.AddDatabaseMigrations();
+
+// Add Redis caching
+builder.AddRedisClient("redis");
+
+// Add cache service
+builder.Services.AddSingleton<ICacheService, RedisCacheService>();
 
 // Add services to the container.
 builder.Services.AddProblemDetails();

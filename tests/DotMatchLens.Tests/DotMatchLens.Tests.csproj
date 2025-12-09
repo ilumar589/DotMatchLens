@@ -17,6 +17,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\DotMatchLens.Football\DotMatchLens.Football.csproj" />
     <ProjectReference Include="..\..\DotMatchLens.Predictions\DotMatchLens.Predictions.csproj" />
+    <ProjectReference Include="..\..\DotMatchLens.Data\DotMatchLens.Data.csproj" />
   </ItemGroup>
 
   <ItemGroup>
