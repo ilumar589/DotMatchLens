@@ -165,6 +165,15 @@ public sealed class FootballDbContext : DbContext
             entity.Property(e => e.WinnerName).HasMaxLength(200);
             entity.Property(e => e.RawJson).HasColumnType("jsonb");
             entity.Property(e => e.Embedding).HasColumnType("vector(768)");
+            
+            // Configure ImmutableArray<string>? as JSONB
+            entity.Property(e => e.Stages)
+                  .HasColumnType("jsonb")
+                  .HasConversion(
+                      v => v.HasValue ? System.Text.Json.JsonSerializer.Serialize(v.Value.ToArray(), (System.Text.Json.JsonSerializerOptions?)null) : null,
+                      v => v != null ? System.Text.Json.JsonSerializer.Deserialize<string[]>(v, (System.Text.Json.JsonSerializerOptions?)null)!.ToImmutableArray() : null
+                  );
+            
             entity.HasOne(e => e.Competition)
                   .WithMany(c => c.Seasons)
                   .HasForeignKey(e => e.CompetitionId)

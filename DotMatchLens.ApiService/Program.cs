@@ -10,6 +10,9 @@ builder.AddServiceDefaults();
 // Add database
 builder.AddFootballDatabase();
 
+// Add database migrations
+builder.AddDatabaseMigrations();
+
 // Add services to the container.
 builder.Services.AddProblemDetails();
 
