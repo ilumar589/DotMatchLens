@@ -1,6 +1,8 @@
 var builder = DistributedApplication.CreateBuilder(args);
 
 var postgres = builder.AddPostgres("postgres")
+    .WithImage("pgvector/pgvector")
+    .WithImageTag("pg16")
     .WithPgAdmin()
     .WithDataVolume();
 
