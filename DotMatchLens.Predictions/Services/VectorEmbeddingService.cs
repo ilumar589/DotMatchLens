@@ -1,6 +1,7 @@
 using System.Collections.Immutable;
 using System.Net.Http.Json;
 using System.Text.Json;
+using DotMatchLens.Core.Services;
 using DotMatchLens.Predictions.Logging;
 
 namespace DotMatchLens.Predictions.Services;
@@ -27,7 +28,7 @@ public sealed class VectorEmbeddingOptions
 /// Service for generating vector embeddings using Ollama.
 /// For testing, inject a custom HttpMessageHandler via HttpClientFactory configuration.
 /// </summary>
-public sealed class VectorEmbeddingService
+public sealed class VectorEmbeddingService : IEmbeddingService
 {
     private static readonly JsonSerializerOptions JsonOptions = new()
     {

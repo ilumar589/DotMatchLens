@@ -1,10 +1,12 @@
 using System.Collections.Immutable;
 using System.Text.Json;
+using DotMatchLens.Core.Services;
 using DotMatchLens.Data.Context;
 using DotMatchLens.Data.Entities;
 using DotMatchLens.Football.Logging;
 using DotMatchLens.Football.Models;
 using Microsoft.EntityFrameworkCore;
+using Pgvector;
 
 namespace DotMatchLens.Football.Services;
 
@@ -15,15 +17,18 @@ public sealed class FootballDataIngestionService
 {
     private readonly FootballDbContext _context;
     private readonly FootballDataApiClient _apiClient;
+    private readonly IEmbeddingService _embeddingService;
     private readonly ILogger<FootballDataIngestionService> _logger;
 
     public FootballDataIngestionService(
         FootballDbContext context,
         FootballDataApiClient apiClient,
+        IEmbeddingService embeddingService,
         ILogger<FootballDataIngestionService> logger)
     {
         _context = context;
         _apiClient = apiClient;
+        _embeddingService = embeddingService;
         _logger = logger;
     }
 
@@ -61,6 +66,19 @@ public sealed class FootballDataIngestionService
 
             var response = competitionResponse.Value;
 
+            // Generate embedding for competition
+            var embedding = await _embeddingService.GenerateCompetitionEmbeddingAsync(
+                response.Name,
+                response.Area?.Name,
+                response.Type,
+                cancellationToken).ConfigureAwait(false);
+
+            Vector? competitionEmbedding = null;
+            if (embedding.HasValue)
+            {
+                competitionEmbedding = new Vector(embedding.Value.ToArray());
+            }
+
             // Check if competition already exists
             var existingCompetition = await _context.Competitions
                 .AsTracking()
@@ -74,6 +92,7 @@ public sealed class FootballDataIngestionService
                 existingCompetition.RawJson = rawJson;
                 existingCompetition.UpdatedAt = DateTime.UtcNow;
                 existingCompetition.SyncedAt = DateTime.UtcNow;
+                existingCompetition.Embedding = competitionEmbedding;
                 competition = existingCompetition;
             }
             else
@@ -91,6 +110,7 @@ public sealed class FootballDataIngestionService
                     AreaCode = response.Area?.Code,
                     AreaFlag = response.Area?.Flag,
                     RawJson = rawJson,
+                    Embedding = competitionEmbedding,
                     SyncedAt = DateTime.UtcNow
                 };
                 _context.Competitions.Add(competition);
@@ -222,6 +242,14 @@ public sealed class FootballDataIngestionService
     {
         var processed = 0;
 
+        // Get competition name for embedding generation
+        var competition = await _context.Competitions
+            .AsNoTracking()
+            .Where(c => c.Id == competitionId)
+            .Select(c => c.Name)
+            .FirstOrDefaultAsync(cancellationToken)
+            .ConfigureAwait(false);
+
         foreach (var seasonDto in seasons)
         {
             var existingSeason = await _context.Seasons
@@ -231,6 +259,20 @@ public sealed class FootballDataIngestionService
 
             var seasonJson = JsonSerializer.Serialize(seasonDto);
 
+            // Generate embedding for season
+            var embedding = await _embeddingService.GenerateSeasonEmbeddingAsync(
+                competition ?? "Unknown",
+                seasonDto.StartDate,
+                seasonDto.EndDate,
+                seasonDto.Winner?.Name,
+                cancellationToken).ConfigureAwait(false);
+
+            Vector? seasonEmbedding = null;
+            if (embedding.HasValue)
+            {
+                seasonEmbedding = new Vector(embedding.Value.ToArray());
+            }
+
             if (existingSeason is not null)
             {
                 // Update existing season
@@ -238,6 +280,7 @@ public sealed class FootballDataIngestionService
                 existingSeason.WinnerExternalId = seasonDto.Winner?.Id;
                 existingSeason.WinnerName = seasonDto.Winner?.Name;
                 existingSeason.RawJson = seasonJson;
+                existingSeason.Embedding = seasonEmbedding;
                 existingSeason.UpdatedAt = DateTime.UtcNow;
             }
             else
@@ -254,7 +297,8 @@ public sealed class FootballDataIngestionService
                     WinnerExternalId = seasonDto.Winner?.Id,
                     WinnerName = seasonDto.Winner?.Name,
                     Stages = seasonDto.Stages,
-                    RawJson = seasonJson
+                    RawJson = seasonJson,
+                    Embedding = seasonEmbedding
                 };
                 _context.Seasons.Add(season);
             }
