@@ -7,14 +7,9 @@ namespace DotMatchLens.Football.HealthChecks;
 /// Health check for the football-data.org API connectivity.
 /// Returns Degraded instead of failing on errors since this is a non-critical external service.
 /// </summary>
-public sealed class FootballDataApiHealthCheck : IHealthCheck
+public sealed class FootballDataApiHealthCheck(IServiceProvider serviceProvider) : IHealthCheck
 {
-    private readonly IServiceProvider _serviceProvider;
-
-    public FootballDataApiHealthCheck(IServiceProvider serviceProvider)
-    {
-        _serviceProvider = serviceProvider;
-    }
+    private readonly IServiceProvider _serviceProvider = serviceProvider;
 
     public async Task<HealthCheckResult> CheckHealthAsync(
         HealthCheckContext context,

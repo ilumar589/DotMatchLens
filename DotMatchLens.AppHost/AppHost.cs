@@ -9,7 +9,7 @@ var footballDb = postgres.AddDatabase("footballdb");
 // Use /alive for Aspire orchestration - checks only app responsiveness
 // Use /ready manually to verify all dependencies are available
 var apiService = builder.AddProject<Projects.DotMatchLens_ApiService>("apiservice")
-    .WithHttpHealthCheck("/alive")
+    //.WithHttpHealthCheck("/alive")
     .WithReference(footballDb)
     .WaitFor(footballDb);
 

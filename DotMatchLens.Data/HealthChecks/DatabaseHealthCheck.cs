@@ -1,4 +1,5 @@
 using DotMatchLens.Data.Context;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 
 namespace DotMatchLens.Data.HealthChecks;
@@ -20,7 +21,7 @@ public sealed class DatabaseHealthCheck : IHealthCheck
         CancellationToken cancellationToken = default)
     {
         try
-        {
+        {   
             // Create a scope to resolve the scoped DbContext
             using var scope = _serviceProvider.CreateScope();
             var dbContext = scope.ServiceProvider.GetService<FootballDbContext>();
