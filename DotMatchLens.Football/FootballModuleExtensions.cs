@@ -1,6 +1,8 @@
 using DotMatchLens.Core.Services;
+using DotMatchLens.Football.Consumers;
 using DotMatchLens.Football.Endpoints;
 using DotMatchLens.Football.Services;
+using MassTransit;
 
 namespace DotMatchLens.Football;
 
@@ -42,6 +44,9 @@ public static class FootballModuleExtensions
 
         // Register the caching decorator for the API client
         services.AddScoped<CachedFootballDataApiClient>();
+
+        // Register MassTransit consumers
+        services.AddScoped<CompetitionSyncConsumer>();
 
         return services;
     }

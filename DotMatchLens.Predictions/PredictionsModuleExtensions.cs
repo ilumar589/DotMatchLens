@@ -1,8 +1,11 @@
 using DotMatchLens.Core.Services;
 using DotMatchLens.Predictions.Agents;
+using DotMatchLens.Predictions.Consumers;
 using DotMatchLens.Predictions.Endpoints;
+using DotMatchLens.Predictions.Sagas;
 using DotMatchLens.Predictions.Services;
 using DotMatchLens.Predictions.Tools;
+using MassTransit;
 
 namespace DotMatchLens.Predictions;
 
@@ -45,6 +48,9 @@ public static class PredictionsModuleExtensions
 
         // Register FootballAgentService using Microsoft Agent Framework
         services.AddScoped<FootballAgentService>();
+
+        // Register MassTransit consumers and sagas
+        services.AddScoped<MatchPredictionConsumer>();
 
         return services;
     }
