@@ -116,7 +116,7 @@ public sealed class CachedFootballDataApiClient
     /// </summary>
     private sealed class CachedCompetitionResponse
     {
-        public CompetitionResponse Data { get; set; }
+        public required CompetitionResponse Data { get; set; }
     }
 
     /// <summary>
