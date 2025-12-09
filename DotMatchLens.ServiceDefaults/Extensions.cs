@@ -62,6 +62,14 @@ public static class ServiceDefaultsExtensions
             .WithTracing(tracing =>
             {
                 tracing.AddSource(builder.Environment.ApplicationName)
+                    // Add trace sources for Agent Framework workflows
+                    .AddSource("DotMatchLens.Predictions.Workflow")
+                    .AddSource("DotMatchLens.Predictions.Agent")
+                    .AddSource("DotMatchLens.Predictions.MassTransit")
+                    .AddSource("DotMatchLens.MassTransit.Consumer")
+                    .AddSource("DotMatchLens.MassTransit.Publisher")
+                    // Add trace sources for Microsoft Agents AI
+                    .AddSource("Microsoft.Agents.AI.*")
                     .AddAspNetCoreInstrumentation(tracing =>
                         // Exclude health check requests from tracing
                         tracing.Filter = context =>
