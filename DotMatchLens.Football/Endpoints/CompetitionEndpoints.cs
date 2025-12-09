@@ -41,7 +41,7 @@ public static class CompetitionEndpoints
         CancellationToken cancellationToken = default)
     {
         var result = await service.SyncCompetitionAsync(competitionCode, cancellationToken)
-            .ConfigureAwait(false);
+            ;
 
         return result.Success
             ? TypedResults.Ok(result)
@@ -54,7 +54,7 @@ public static class CompetitionEndpoints
         CancellationToken cancellationToken = default)
     {
         var competition = await service.GetCompetitionAsync(competitionCode, cancellationToken)
-            .ConfigureAwait(false);
+            ;
 
         return competition.HasValue
             ? TypedResults.Ok(competition.Value)
@@ -67,7 +67,7 @@ public static class CompetitionEndpoints
         CancellationToken cancellationToken = default)
     {
         var seasons = await service.GetSeasonsForCompetitionAsync(competitionCode, cancellationToken)
-            .ConfigureAwait(false);
+            ;
 
         return TypedResults.Ok(seasons);
     }

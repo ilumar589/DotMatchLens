@@ -44,7 +44,7 @@ public sealed class GetCompetitionHistoryTool
             var competition = await _context.Competitions
                 .Include(c => c.Seasons)
                 .FirstOrDefaultAsync(c => c.Code == competitionCode, cancellationToken)
-                .ConfigureAwait(false);
+                ;
 
             if (competition is null)
             {
@@ -120,7 +120,7 @@ public sealed class FindSimilarTeamsTool
         {
             // Generate embedding for the search query
             var queryEmbedding = await _embeddingService.GenerateEmbeddingAsync(description, cancellationToken)
-                .ConfigureAwait(false);
+                ;
 
             if (!queryEmbedding.HasValue)
             {
@@ -139,7 +139,7 @@ public sealed class FindSimilarTeamsTool
                         t.Founded,
                         0.5f))
                     .ToListAsync(cancellationToken)
-                    .ConfigureAwait(false);
+                    ;
 
                 PredictionLogMessages.LogSimilarTeamsFound(_logger, textResults.Count);
                 PredictionLogMessages.LogToolCompleted(_logger, nameof(FindSimilarTeamsTool));
@@ -164,7 +164,7 @@ public sealed class FindSimilarTeamsTool
                     Distance = t.Embedding!.CosineDistance(queryVector)
                 })
                 .ToListAsync(cancellationToken)
-                .ConfigureAwait(false);
+                ;
 
             var similarTeams = results
                 .Select(r => new SimilarTeamResult(
@@ -223,7 +223,7 @@ public sealed class SeasonStatisticsTool
             var season = await _context.Seasons
                 .Include(s => s.Competition)
                 .FirstOrDefaultAsync(s => s.ExternalId == seasonId, cancellationToken)
-                .ConfigureAwait(false);
+                ;
 
             if (season is null)
             {
@@ -259,7 +259,7 @@ public sealed class SeasonStatisticsTool
                 .Where(s => s.StartDate >= startDate && s.EndDate <= endDate)
                 .OrderByDescending(s => s.StartDate)
                 .ToListAsync(cancellationToken)
-                .ConfigureAwait(false);
+                ;
 
             var results = seasons.Select(CreateStatisticsResult).ToImmutableArray();
             PredictionLogMessages.LogToolCompleted(_logger, nameof(SeasonStatisticsTool));
@@ -332,7 +332,7 @@ public sealed class CompetitionSearchTool
         {
             // Generate embedding for the search query
             var queryEmbedding = await _embeddingService.GenerateEmbeddingAsync(query, cancellationToken)
-                .ConfigureAwait(false);
+                ;
 
             if (!queryEmbedding.HasValue)
             {
@@ -351,7 +351,7 @@ public sealed class CompetitionSearchTool
                         c.AreaName,
                         0.5f))
                     .ToListAsync(cancellationToken)
-                    .ConfigureAwait(false);
+                    ;
 
                 PredictionLogMessages.LogToolCompleted(_logger, nameof(CompetitionSearchTool));
                 return [.. textResults];
@@ -374,7 +374,7 @@ public sealed class CompetitionSearchTool
                     Distance = c.Embedding!.CosineDistance(queryVector)
                 })
                 .ToListAsync(cancellationToken)
-                .ConfigureAwait(false);
+                ;
 
             var competitions = results
                 .Select(r => new CompetitionSearchResult(

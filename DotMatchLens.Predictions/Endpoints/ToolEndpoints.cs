@@ -49,7 +49,7 @@ public static class ToolEndpoints
         CancellationToken cancellationToken = default)
     {
         var result = await tool.ExecuteAsync(competitionCode, cancellationToken)
-            .ConfigureAwait(false);
+            ;
 
         return result.HasValue
             ? TypedResults.Ok(result.Value)
@@ -63,7 +63,7 @@ public static class ToolEndpoints
         CancellationToken cancellationToken = default)
     {
         var results = await tool.ExecuteAsync(description, limit, cancellationToken)
-            .ConfigureAwait(false);
+            ;
 
         return TypedResults.Ok(results);
     }
@@ -74,7 +74,7 @@ public static class ToolEndpoints
         CancellationToken cancellationToken = default)
     {
         var result = await tool.GetByIdAsync(seasonId, cancellationToken)
-            .ConfigureAwait(false);
+            ;
 
         return result.HasValue
             ? TypedResults.Ok(result.Value)
@@ -91,7 +91,7 @@ public static class ToolEndpoints
         var effectiveEndDate = endDate ?? DateOnly.FromDateTime(DateTime.UtcNow.AddYears(1));
 
         var results = await tool.GetByDateRangeAsync(effectiveStartDate, effectiveEndDate, cancellationToken)
-            .ConfigureAwait(false);
+            ;
 
         return TypedResults.Ok(results);
     }
@@ -103,7 +103,7 @@ public static class ToolEndpoints
         CancellationToken cancellationToken = default)
     {
         var results = await tool.ExecuteAsync(query, limit, cancellationToken)
-            .ConfigureAwait(false);
+            ;
 
         return TypedResults.Ok(results);
     }

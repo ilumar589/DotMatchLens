@@ -47,7 +47,7 @@ public sealed class FootballDataIngestionService
         {
             // Fetch raw JSON and parsed response
             var rawJson = await _apiClient.GetCompetitionRawJsonAsync(competitionCode, cancellationToken)
-                .ConfigureAwait(false);
+                ;
 
             if (string.IsNullOrEmpty(rawJson))
             {
@@ -56,7 +56,7 @@ public sealed class FootballDataIngestionService
             }
 
             var competitionResponse = await _apiClient.GetCompetitionAsync(competitionCode, cancellationToken)
-                .ConfigureAwait(false);
+                ;
 
             if (competitionResponse is null)
             {
@@ -71,7 +71,7 @@ public sealed class FootballDataIngestionService
                 response.Name,
                 response.Area?.Name,
                 response.Type,
-                cancellationToken).ConfigureAwait(false);
+                cancellationToken);
 
             Vector? competitionEmbedding = null;
             if (embedding.HasValue)
@@ -83,7 +83,7 @@ public sealed class FootballDataIngestionService
             var existingCompetition = await _context.Competitions
                 .AsTracking()
                 .FirstOrDefaultAsync(c => c.Code == competitionCode, cancellationToken)
-                .ConfigureAwait(false);
+                ;
 
             Competition competition;
             if (existingCompetition is not null)
@@ -123,10 +123,10 @@ public sealed class FootballDataIngestionService
                 seasonsProcessed = await ProcessSeasonsAsync(
                     competition.Id,
                     response.Seasons.Value,
-                    cancellationToken).ConfigureAwait(false);
+                    cancellationToken);
             }
 
-            await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+            await _context.SaveChangesAsync(cancellationToken);
 
             FootballLogMessages.LogCompetitionSyncCompleted(_logger, competitionCode, seasonsProcessed);
 
@@ -170,7 +170,7 @@ public sealed class FootballDataIngestionService
                 c.AreaCode,
                 c.SyncedAt ?? c.CreatedAt))
             .FirstOrDefaultAsync(cancellationToken)
-            .ConfigureAwait(false);
+            ;
 
         return competition == default ? null : competition;
     }
@@ -196,7 +196,7 @@ public sealed class FootballDataIngestionService
                 s.WinnerName,
                 s.WinnerExternalId))
             .FirstOrDefaultAsync(cancellationToken)
-            .ConfigureAwait(false);
+            ;
 
         if (season == default)
         {
@@ -230,7 +230,7 @@ public sealed class FootballDataIngestionService
                 s.WinnerName,
                 s.WinnerExternalId))
             .ToListAsync(cancellationToken)
-            .ConfigureAwait(false);
+            ;
         
         return [.. seasons];
     }
@@ -248,14 +248,14 @@ public sealed class FootballDataIngestionService
             .Where(c => c.Id == competitionId)
             .Select(c => c.Name)
             .FirstOrDefaultAsync(cancellationToken)
-            .ConfigureAwait(false);
+            ;
 
         foreach (var seasonDto in seasons)
         {
             var existingSeason = await _context.Seasons
                 .AsTracking()
                 .FirstOrDefaultAsync(s => s.ExternalId == seasonDto.Id, cancellationToken)
-                .ConfigureAwait(false);
+                ;
 
             var seasonJson = JsonSerializer.Serialize(seasonDto);
 
@@ -265,7 +265,7 @@ public sealed class FootballDataIngestionService
                 seasonDto.StartDate,
                 seasonDto.EndDate,
                 seasonDto.Winner?.Name,
-                cancellationToken).ConfigureAwait(false);
+                cancellationToken);
 
             Vector? seasonEmbedding = null;
             if (embedding.HasValue)

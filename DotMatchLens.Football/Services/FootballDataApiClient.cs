@@ -45,17 +45,17 @@ public sealed class FootballDataApiClient
             var requestUri = new Uri($"/v4/competitions/{competitionCode}", UriKind.Relative);
             var response = await _httpClient.GetAsync(
                 requestUri,
-                cancellationToken).ConfigureAwait(false);
+                cancellationToken);
 
             if (!response.IsSuccessStatusCode)
             {
-                await HandleErrorResponseAsync(response, competitionCode, cancellationToken).ConfigureAwait(false);
+                await HandleErrorResponseAsync(response, competitionCode, cancellationToken);
                 return null;
             }
 
             var competition = await response.Content
                 .ReadFromJsonAsync<CompetitionResponse>(JsonOptions, cancellationToken)
-                .ConfigureAwait(false);
+                ;
 
             FootballLogMessages.LogCompetitionFetched(_logger, competitionCode, competition.Name);
             return competition;
@@ -86,17 +86,17 @@ public sealed class FootballDataApiClient
             var requestUri = new Uri($"/v4/competitions/{competitionCode}", UriKind.Relative);
             var response = await _httpClient.GetAsync(
                 requestUri,
-                cancellationToken).ConfigureAwait(false);
+                cancellationToken);
 
             if (!response.IsSuccessStatusCode)
             {
-                await HandleErrorResponseAsync(response, competitionCode, cancellationToken).ConfigureAwait(false);
+                await HandleErrorResponseAsync(response, competitionCode, cancellationToken);
                 return null;
             }
 
             return await response.Content
                 .ReadAsStringAsync(cancellationToken)
-                .ConfigureAwait(false);
+                ;
         }
         catch (HttpRequestException ex)
         {
@@ -117,7 +117,7 @@ public sealed class FootballDataApiClient
     {
         var errorContent = await response.Content
             .ReadAsStringAsync(cancellationToken)
-            .ConfigureAwait(false);
+            ;
 
         switch (response.StatusCode)
         {

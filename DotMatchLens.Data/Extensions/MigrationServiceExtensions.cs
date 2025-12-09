@@ -50,7 +50,7 @@ public static class MigrationServiceExtensions
                 var context = scope.ServiceProvider.GetRequiredService<FootballDbContext>();
                 
                 // Apply pending migrations
-                await context.Database.MigrateAsync(cancellationToken).ConfigureAwait(false);
+                await context.Database.MigrateAsync(cancellationToken);
                 
                 MigrationLogMessages.LogMigrationCompleted(_logger);
             }

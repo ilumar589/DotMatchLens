@@ -32,7 +32,7 @@ public static class SeasonEndpoints
         CancellationToken cancellationToken = default)
     {
         var season = await service.GetSeasonAsync(seasonId, cancellationToken)
-            .ConfigureAwait(false);
+            ;
 
         return season.HasValue
             ? TypedResults.Ok(season.Value)

@@ -48,7 +48,7 @@ public static class PredictionEndpoints
                 request.MatchId,
                 request.AdditionalContext,
                 cancellationToken)
-                .ConfigureAwait(false);
+                ;
             return TypedResults.Created($"/api/predictions/match/{prediction.MatchId}", prediction);
         }
         catch (InvalidOperationException ex)
@@ -63,7 +63,7 @@ public static class PredictionEndpoints
         CancellationToken cancellationToken = default)
     {
         var predictions = await service.GetPredictionsForMatchAsync(matchId, cancellationToken)
-            .ConfigureAwait(false);
+            ;
         return TypedResults.Ok(predictions);
     }
 
@@ -82,7 +82,7 @@ public static class PredictionEndpoints
                 .Include(m => m.HomeTeam)
                 .Include(m => m.AwayTeam)
                 .FirstOrDefaultAsync(m => m.Id == request.MatchId.Value, cancellationToken)
-                .ConfigureAwait(false);
+                ;
 
             if (match is not null)
             {
@@ -92,7 +92,7 @@ public static class PredictionEndpoints
 
         // Use FootballAgentService with Microsoft Agent Framework instead of custom implementation
         var response = await agentService.QueryAsync(request.Query, matchContext, cancellationToken)
-            .ConfigureAwait(false);
+            ;
         return TypedResults.Ok(response);
     }
 }

@@ -42,7 +42,7 @@ public sealed class PredictionService
             .Include(m => m.HomeTeam)
             .Include(m => m.AwayTeam)
             .FirstOrDefaultAsync(m => m.Id == matchId, cancellationToken)
-            .ConfigureAwait(false);
+            ;
 
         if (match is null)
         {
@@ -62,7 +62,7 @@ public sealed class PredictionService
                 match.MatchDate,
                 additionalContext,
                 cancellationToken)
-                .ConfigureAwait(false);
+                ;
 
             // Create and save the prediction
             var prediction = new MatchPrediction
@@ -81,7 +81,7 @@ public sealed class PredictionService
             };
 
             _context.MatchPredictions.Add(prediction);
-            await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+            await _context.SaveChangesAsync(cancellationToken);
 
             PredictionLogMessages.LogPredictionGenerated(_logger, prediction.Id, matchId, prediction.Confidence);
 
@@ -132,7 +132,7 @@ public sealed class PredictionService
                 p.ModelVersion,
                 p.PredictedAt))
             .ToListAsync(cancellationToken)
-            .ConfigureAwait(false);
+            ;
     }
 
     /// <summary>
@@ -151,7 +151,7 @@ public sealed class PredictionService
                 .Include(m => m.HomeTeam)
                 .Include(m => m.AwayTeam)
                 .FirstOrDefaultAsync(m => m.Id == matchId.Value, cancellationToken)
-                .ConfigureAwait(false);
+                ;
 
             if (match is not null)
             {
@@ -159,7 +159,7 @@ public sealed class PredictionService
             }
         }
 
-        var response = await _agent.QueryAsync(query, matchContext, cancellationToken).ConfigureAwait(false);
+        var response = await _agent.QueryAsync(query, matchContext, cancellationToken);
 
         return new AgentResponse(
             response.Response,
