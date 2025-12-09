@@ -1,10 +1,14 @@
 using DotMatchLens.Core.Services;
 using DotMatchLens.Predictions.Agents;
+using DotMatchLens.Predictions.Configuration;
 using DotMatchLens.Predictions.Consumers;
 using DotMatchLens.Predictions.Endpoints;
+using DotMatchLens.Predictions.HealthChecks;
+using DotMatchLens.Predictions.Observability;
 using DotMatchLens.Predictions.Sagas;
 using DotMatchLens.Predictions.Services;
 using DotMatchLens.Predictions.Tools;
+using DotMatchLens.Predictions.UI;
 using MassTransit;
 
 namespace DotMatchLens.Predictions;
@@ -27,8 +31,20 @@ public static class PredictionsModuleExtensions
             ?? new OllamaAgentOptions();
         services.AddSingleton(ollamaOptions);
 
+        // Register workflow options
+        services.Configure<WorkflowOptions>(configuration.GetSection(WorkflowOptions.SectionName));
+
         // Register HTTP client for Ollama (for LLM predictions only, not embeddings)
         services.AddHttpClient("Ollama");
+
+        // Register observability components
+        services.AddSingleton<WorkflowMetrics>();
+        services.AddSingleton<WorkflowGraphBuilder>();
+
+        // Register health checks
+        services.AddHealthChecks()
+            .AddCheck<WorkflowHealthCheck>("workflow_health", tags: ["predictions", "workflow"])
+            .AddCheck<OllamaHealthCheck>("ollama_health", tags: ["predictions", "ollama", "ai"]);
 
         // Register the prediction agent
         services.AddScoped<IPredictionAgent, OllamaPredictionAgent>();
@@ -70,6 +86,7 @@ public static class PredictionsModuleExtensions
 
         endpoints.MapPredictionEndpoints();
         endpoints.MapToolEndpoints();
+        endpoints.MapWorkflowVisualizationEndpoints();
 
         return endpoints;
     }
