@@ -14,7 +14,10 @@ var redis = builder.AddRedis("redis")
 
 // Add Kafka for message-based communication between modules
 var kafka = builder.AddKafka("kafka")
-    .WithKafkaUI();
+    .WithKafkaUI()
+    .WithEnvironment("KAFKA_AUTO_CREATE_TOPICS_ENABLE", "true")
+    .WithEnvironment("KAFKA_NUM_PARTITIONS", "1")
+    .WithHealthCheck("kafka-health");
 
 // Add Ollama container for LLM predictions (not used for embeddings)
 var ollama = builder.AddContainer("ollama", "ollama/ollama")
