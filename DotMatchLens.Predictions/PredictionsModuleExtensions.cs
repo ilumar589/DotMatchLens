@@ -43,6 +43,12 @@ public static class PredictionsModuleExtensions
         services.AddScoped<SeasonStatisticsTool>();
         services.AddScoped<CompetitionSearchTool>();
 
+        // Register MCP Tools for workflow-based predictions
+        services.AddScoped<GetTeamsTool>();
+        services.AddScoped<GetMatchesTool>();
+        services.AddScoped<SearchSimilarMatchesTool>();
+        services.AddScoped<SavePredictionTool>();
+
         // Register FootballDataTools with AIFunction pattern
         services.AddScoped<FootballDataTools>();
 
