@@ -16,13 +16,13 @@ namespace DotMatchLens.Football.Services;
 public sealed class FootballDataIngestionService
 {
     private readonly FootballDbContext _context;
-    private readonly FootballDataApiClient _apiClient;
+    private readonly CachedFootballDataApiClient _apiClient;
     private readonly IEmbeddingService _embeddingService;
     private readonly ILogger<FootballDataIngestionService> _logger;
 
     public FootballDataIngestionService(
         FootballDbContext context,
-        FootballDataApiClient apiClient,
+        CachedFootballDataApiClient apiClient,
         IEmbeddingService embeddingService,
         ILogger<FootballDataIngestionService> logger)
     {
