@@ -10,6 +10,13 @@
     <AnalysisLevel>latest-all</AnalysisLevel>
     <!-- CA1515: Public types need sealed/abstract, IDE0300/305: Collection expressions, CA1031: Catch all exceptions, CA1812: Avoid uninstantiated internal classes, CA1861: Constant arrays, CA2007: ConfigureAwait (not needed in app code) -->
     <NoWarn>$(NoWarn);CA1515;IDE0300;IDE0305;CA1031;CA1812;CA1861;CA2007</NoWarn>
+    
+    <!-- Performance optimizations -->
+    <OptimizationPreference>Speed</OptimizationPreference>
+    <!-- Enable Profile-Guided Optimization (PGO) -->
+    <TieredPGO>true</TieredPGO>
+    <!-- Enable Dynamic Adaptation To Application Sizes (DATAS) -->
+    <GarbageCollectionAdaptationMode>1</GarbageCollectionAdaptationMode>
   </PropertyGroup>
 
   <!-- Centralize EF Core version to resolve conflicts -->
