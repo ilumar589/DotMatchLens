@@ -31,53 +31,49 @@ builder.Services.AddProblemDetails();
 builder.Services.AddFootballModule(builder.Configuration);
 builder.Services.AddPredictionsModule(builder.Configuration);
 
-// Configure MassTransit with Kafka
+// Configure MassTransit with RabbitMQ
 builder.Services.AddMassTransit(x =>
 {
     // Add consumers
     x.AddConsumer<CompetitionSyncConsumer>();
     x.AddConsumer<MatchPredictionConsumer>();
 
-    // Add saga state machine
+    // Add saga state machine with in-memory repository
     x.AddSagaStateMachine<PredictionSaga, PredictionSagaState>()
-        .InMemoryRepository(); // Use in-memory for now, can switch to Entity Framework or Redis later
+        .InMemoryRepository();
 
-    // Configure Kafka
-    x.UsingInMemory((context, cfg) =>
+    // Configure RabbitMQ transport
+    x.UsingRabbitMq((context, cfg) =>
     {
-        cfg.ConfigureEndpoints(context);
-    });
-
-    // Add Kafka riders for pub/sub
-    x.AddRider(rider =>
-    {
-        rider.AddConsumer<CompetitionSyncConsumer>();
-        rider.AddConsumer<MatchPredictionConsumer>();
-
-        rider.UsingKafka((context, k) =>
+        // Get RabbitMQ connection from Aspire service discovery
+        var configuration = context.GetRequiredService<IConfiguration>();
+        var rabbitConnection = configuration.GetConnectionString("rabbitmq");
+        
+        var logger = context.GetRequiredService<ILoggerFactory>().CreateLogger("RabbitMQSetup");
+        logger.LogInformation("RabbitMQ connection string: {ConnectionString}", rabbitConnection);
+        
+        if (!string.IsNullOrEmpty(rabbitConnection))
         {
-            // Get configuration from the DI container at runtime (after Aspire injects values)
-            var configuration = context.GetRequiredService<IConfiguration>();
-            var kafkaConnection = configuration.GetConnectionString("kafka");
-            
-            if (string.IsNullOrEmpty(kafkaConnection))
+            cfg.Host(new Uri(rabbitConnection));
+        }
+        else
+        {
+            // Fallback for local development without Aspire
+            cfg.Host("localhost", "/", h =>
             {
-                throw new InvalidOperationException(
-                    "Kafka connection string 'kafka' is not configured. Ensure Aspire AppHost properly references Kafka.");
-            }
-            
-            k.Host(kafkaConnection);
-
-            k.TopicEndpoint<DotMatchLens.Core.Contracts.CompetitionSyncRequested>("competition-sync", "dotmatchlens-group", e =>
-            {
-                e.ConfigureConsumer<CompetitionSyncConsumer>(context);
+                h.Username("guest");
+                h.Password("guest");
             });
+        }
 
-            k.TopicEndpoint<DotMatchLens.Core.Contracts.MatchPredictionRequested>("match-prediction", "dotmatchlens-group", e =>
-            {
-                e.ConfigureConsumer<MatchPredictionConsumer>(context);
-            });
-        });
+        // Configure endpoints automatically
+        cfg.ConfigureEndpoints(context);
+        
+        // Configure message retry
+        cfg.UseMessageRetry(r => r.Intervals(100, 200, 500, 1000, 2000));
+        
+        // Configure error handling
+        cfg.UseInMemoryOutbox(context);
     });
 });
 
