@@ -56,8 +56,16 @@ builder.Services.AddMassTransit(x =>
 
         rider.UsingKafka((context, k) =>
         {
-            // Get Kafka connection from Aspire service discovery
-            var kafkaConnection = builder.Configuration.GetConnectionString("kafka") ?? "localhost:9092";
+            // Get configuration from the DI container at runtime (after Aspire injects values)
+            var configuration = context.GetRequiredService<IConfiguration>();
+            var kafkaConnection = configuration.GetConnectionString("kafka");
+            
+            if (string.IsNullOrEmpty(kafkaConnection))
+            {
+                throw new InvalidOperationException(
+                    "Kafka connection string 'kafka' is not configured. Ensure Aspire AppHost properly references Kafka.");
+            }
+            
             k.Host(kafkaConnection);
 
             k.TopicEndpoint<DotMatchLens.Core.Contracts.CompetitionSyncRequested>("competition-sync", "dotmatchlens-group", e =>

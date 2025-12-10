@@ -16,7 +16,8 @@ var redis = builder.AddRedis("redis")
 var kafka = builder.AddKafka("kafka")
     .WithKafkaUI()
     .WithEnvironment("KAFKA_AUTO_CREATE_TOPICS_ENABLE", "true")
-    .WithEnvironment("KAFKA_NUM_PARTITIONS", "1");
+    .WithEnvironment("KAFKA_NUM_PARTITIONS", "1")
+    .WithDataVolume();
 
 // Add Ollama container for LLM predictions (not used for embeddings)
 var ollama = builder.AddContainer("ollama", "ollama/ollama")
