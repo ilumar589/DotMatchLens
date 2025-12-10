@@ -51,7 +51,7 @@ builder.Services.AddMassTransit(x =>
         
         var logger = context.GetRequiredService<ILoggerFactory>().CreateLogger("RabbitMQSetup");
 #pragma warning disable CA1848 // Use LoggerMessage delegates for performance
-        logger.LogInformation("RabbitMQ connection string: {ConnectionString}", rabbitConnection);
+        logger.LogInformation("Configuring RabbitMQ connection");
 #pragma warning restore CA1848
         
         if (!string.IsNullOrEmpty(rabbitConnection))
