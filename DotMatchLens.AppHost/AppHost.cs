@@ -12,11 +12,9 @@ var footballDb = postgres.AddDatabase("footballdb");
 var redis = builder.AddRedis("redis")
     .WithDataVolume();
 
-// Add Kafka for message-based communication between modules
-var kafka = builder.AddKafka("kafka")
-    .WithKafkaUI()
-    .WithEnvironment("KAFKA_AUTO_CREATE_TOPICS_ENABLE", "true")
-    .WithEnvironment("KAFKA_NUM_PARTITIONS", "1")
+// Add RabbitMQ for message-based communication between modules
+var rabbitmq = builder.AddRabbitMQ("rabbitmq")
+    .WithManagementPlugin()
     .WithDataVolume();
 
 // Add Ollama container for LLM predictions (not used for embeddings)
@@ -29,11 +27,11 @@ var apiService = builder.AddProject<Projects.DotMatchLens_ApiService>("apiservic
     .WithHttpHealthCheck("/health")
     .WithReference(footballDb)
     .WithReference(redis)
-    .WithReference(kafka)
+    .WithReference(rabbitmq)
     .WithEnvironment("OllamaAgent__Endpoint", ollama.GetEndpoint("ollama"))
     .WaitFor(footballDb)
     .WaitFor(redis)
-    .WaitFor(kafka)
+    .WaitFor(rabbitmq)
     .WaitFor(ollama);
 
 // Add WebUI with reference to API service
