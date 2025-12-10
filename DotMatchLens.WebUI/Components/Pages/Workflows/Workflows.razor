@@ -1,0 +1,134 @@
+@page "/workflows"
+@rendermode InteractiveServer
+@inject WorkflowApiService WorkflowApi
+@inject FootballApiService FootballApi
+@inject ISnackbar Snackbar
+
+<PageTitle>Workflows - DotMatchLens</PageTitle>
+
+<MudText Typo="Typo.h4" Class="mb-4">Workflows</MudText>
+
+<MudGrid>
+    <MudItem xs="12" md="6">
+        <MudCard>
+            <MudCardHeader>
+                <CardHeaderContent>
+                    <MudText Typo="Typo.h6">Trigger Match Prediction Workflow</MudText>
+                </CardHeaderContent>
+            </MudCardHeader>
+            <MudCardContent>
+                <MudSelect T="Guid?" @bind-Value="_selectedMatchId" Label="Select Match" Variant="Variant.Outlined">
+                    @foreach (var match in _matches)
+                    {
+                        <MudSelectItem Value="@match.Id">@match.HomeTeamName vs @match.AwayTeamName</MudSelectItem>
+                    }
+                </MudSelect>
+                <MudButton OnClick="TriggerMatchWorkflow" Variant="Variant.Filled" Color="Color.Primary" 
+                           StartIcon="@Icons.Material.Filled.PlayArrow" Class="mt-3">Trigger Workflow</MudButton>
+            </MudCardContent>
+        </MudCard>
+    </MudItem>
+
+    <MudItem xs="12" md="6">
+        <MudCard>
+            <MudCardHeader>
+                <CardHeaderContent>
+                    <MudText Typo="Typo.h6">Active Workflows</MudText>
+                </CardHeaderContent>
+            </MudCardHeader>
+            <MudCardContent>
+                @if (_loading)
+                {
+                    <MudProgressLinear Color="Color.Primary" Indeterminate="true" />
+                }
+                else if (_activeWorkflows.Count == 0)
+                {
+                    <MudText>No active workflows</MudText>
+                }
+                else
+                {
+                    <MudList T="string">
+                        @foreach (var workflow in _activeWorkflows)
+                        {
+                            <MudListItem T="string">
+                                <MudText><strong>@workflow.WorkflowType</strong></MudText>
+                                <MudText Typo="Typo.body2">Status: @workflow.Status</MudText>
+                                <MudText Typo="Typo.body2">Started: @workflow.StartedAt.ToString("yyyy-MM-dd HH:mm")</MudText>
+                            </MudListItem>
+                        }
+                    </MudList>
+                }
+                <MudButton OnClick="LoadActiveWorkflows" Variant="Variant.Text" Color="Color.Primary" 
+                           StartIcon="@Icons.Material.Filled.Refresh" Class="mt-3">Refresh</MudButton>
+            </MudCardContent>
+        </MudCard>
+    </MudItem>
+</MudGrid>
+
+@code {
+    private List<DotMatchLens.Football.Models.MatchDto> _matches = [];
+    private List<ActiveWorkflowDto> _activeWorkflows = [];
+    private Guid? _selectedMatchId = null;
+    private bool _loading = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Task.WhenAll(LoadMatches(), LoadActiveWorkflows());
+    }
+
+    private async Task LoadMatches()
+    {
+        try
+        {
+            _matches = await FootballApi.GetMatchesAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading matches: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task LoadActiveWorkflows()
+    {
+        _loading = true;
+        try
+        {
+            _activeWorkflows = await WorkflowApi.GetActiveWorkflowsAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading workflows: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private async Task TriggerMatchWorkflow()
+    {
+        if (!_selectedMatchId.HasValue)
+        {
+            Snackbar.Add("Please select a match", Severity.Warning);
+            return;
+        }
+
+        try
+        {
+            var result = await WorkflowApi.TriggerMatchPredictionWorkflowAsync(_selectedMatchId.Value);
+            if (result != null)
+            {
+                Snackbar.Add($"Workflow triggered successfully. Correlation ID: {result.CorrelationId}", Severity.Success);
+                await LoadActiveWorkflows();
+            }
+            else
+            {
+                Snackbar.Add("Failed to trigger workflow", Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error triggering workflow: {ex.Message}", Severity.Error);
+        }
+    }
+}

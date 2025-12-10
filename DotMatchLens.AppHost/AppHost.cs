@@ -35,4 +35,10 @@ var apiService = builder.AddProject<Projects.DotMatchLens_ApiService>("apiservic
     .WaitFor(kafka)
     .WaitFor(ollama);
 
+// Add WebUI with reference to API service
+builder.AddProject<Projects.DotMatchLens_WebUI>("webui")
+    .WithExternalHttpEndpoints()
+    .WithReference(apiService)
+    .WaitFor(apiService);
+
 builder.Build().Run();

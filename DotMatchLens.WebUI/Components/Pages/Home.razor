@@ -1,0 +1,119 @@
+﻿@page "/"
+@rendermode InteractiveServer
+@inject FootballApiService FootballApi
+@inject PredictionsApiService PredictionsApi
+
+<PageTitle>Dashboard - DotMatchLens</PageTitle>
+
+<MudText Typo="Typo.h4" Class="mb-4">Dashboard</MudText>
+
+@if (_loading)
+{
+    <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-7" />
+}
+else
+{
+    <MudGrid>
+        <MudItem xs="12" sm="6" md="3">
+            <MudCard Elevation="2">
+                <MudCardContent>
+                    <MudText Typo="Typo.h6" Color="Color.Primary">Teams</MudText>
+                    <MudText Typo="Typo.h3">@_teamCount</MudText>
+                </MudCardContent>
+                <MudCardActions>
+                    <MudButton Href="/teams" Color="Color.Primary" Variant="Variant.Text">View All</MudButton>
+                </MudCardActions>
+            </MudCard>
+        </MudItem>
+
+        <MudItem xs="12" sm="6" md="3">
+            <MudCard Elevation="2">
+                <MudCardContent>
+                    <MudText Typo="Typo.h6" Color="Color.Secondary">Players</MudText>
+                    <MudText Typo="Typo.h3">@_playerCount</MudText>
+                </MudCardContent>
+                <MudCardActions>
+                    <MudButton Href="/players" Color="Color.Secondary" Variant="Variant.Text">View All</MudButton>
+                </MudCardActions>
+            </MudCard>
+        </MudItem>
+
+        <MudItem xs="12" sm="6" md="3">
+            <MudCard Elevation="2">
+                <MudCardContent>
+                    <MudText Typo="Typo.h6" Color="Color.Tertiary">Matches</MudText>
+                    <MudText Typo="Typo.h3">@_matchCount</MudText>
+                </MudCardContent>
+                <MudCardActions>
+                    <MudButton Href="/matches" Color="Color.Tertiary" Variant="Variant.Text">View All</MudButton>
+                </MudCardActions>
+            </MudCard>
+        </MudItem>
+
+        <MudItem xs="12" sm="6" md="3">
+            <MudCard Elevation="2">
+                <MudCardContent>
+                    <MudText Typo="Typo.h6" Color="Color.Success">Predictions</MudText>
+                    <MudText Typo="Typo.h3">@_predictionCount</MudText>
+                </MudCardContent>
+                <MudCardActions>
+                    <MudButton Href="/predictions" Color="Color.Success" Variant="Variant.Text">View All</MudButton>
+                </MudCardActions>
+            </MudCard>
+        </MudItem>
+    </MudGrid>
+
+    <MudGrid Class="mt-4">
+        <MudItem xs="12">
+            <MudCard Elevation="2">
+                <MudCardHeader>
+                    <CardHeaderContent>
+                        <MudText Typo="Typo.h6">Quick Actions</MudText>
+                    </CardHeaderContent>
+                </MudCardHeader>
+                <MudCardContent>
+                    <MudStack Row="true" Spacing="2">
+                        <MudButton Href="/teams" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add">New Team</MudButton>
+                        <MudButton Href="/matches" Variant="Variant.Filled" Color="Color.Secondary" StartIcon="@Icons.Material.Filled.Add">New Match</MudButton>
+                        <MudButton Href="/predictions" Variant="Variant.Filled" Color="Color.Tertiary" StartIcon="@Icons.Material.Filled.Psychology">Generate Prediction</MudButton>
+                        <MudButton Href="/competitions" Variant="Variant.Filled" Color="Color.Info" StartIcon="@Icons.Material.Filled.Sync">Sync Competition</MudButton>
+                    </MudStack>
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+    </MudGrid>
+}
+
+@code {
+    private bool _loading = true;
+    private int _teamCount = 0;
+    private int _playerCount = 0;
+    private int _matchCount = 0;
+    private int _predictionCount = 0;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var teams = await FootballApi.GetTeamsAsync();
+            _teamCount = teams.Count;
+
+            var players = await FootballApi.GetPlayersAsync();
+            _playerCount = players.Count;
+
+            var matches = await FootballApi.GetMatchesAsync();
+            _matchCount = matches.Count;
+
+            // Note: We don't have a GetAllPredictions endpoint, so we'll skip this for now
+            _predictionCount = 0;
+        }
+        catch (Exception)
+        {
+            // Silently handle errors for now
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+}

@@ -7,6 +7,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\DotMatchLens.ApiService\DotMatchLens.ApiService.csproj" />
+    <ProjectReference Include="..\DotMatchLens.WebUI\DotMatchLens.WebUI.csproj" />
   </ItemGroup>
 
   <ItemGroup>

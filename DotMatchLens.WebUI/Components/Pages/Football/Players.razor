@@ -1,0 +1,152 @@
+@page "/players"
+@rendermode InteractiveServer
+@inject FootballApiService FootballApi
+@inject ISnackbar Snackbar
+
+<PageTitle>Players - DotMatchLens</PageTitle>
+
+<MudText Typo="Typo.h4" Class="mb-4">Players</MudText>
+
+<MudGrid>
+    <MudItem xs="12">
+        <MudCard>
+            <MudCardContent>
+                <MudGrid>
+                    <MudItem xs="12" sm="6">
+                        <MudSelect T="Guid?" @bind-Value="_teamFilter" Label="Filter by Team" Variant="Variant.Outlined" Clearable="true">
+                            @foreach (var team in _teams)
+                            {
+                                <MudSelectItem Value="@team.Id">@team.Name</MudSelectItem>
+                            }
+                        </MudSelect>
+                    </MudItem>
+                    <MudItem xs="12" sm="6" Class="d-flex align-center">
+                        <MudButton OnClick="LoadPlayers" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Search">Search</MudButton>
+                        <MudButton OnClick="() => _showCreateDialog = true" Variant="Variant.Filled" Color="Color.Secondary" StartIcon="@Icons.Material.Filled.Add" Class="ml-2">Create Player</MudButton>
+                    </MudItem>
+                </MudGrid>
+            </MudCardContent>
+        </MudCard>
+    </MudItem>
+
+    <MudItem xs="12">
+        <MudCard>
+            <MudCardContent>
+                @if (_loading)
+                {
+                    <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-7" />
+                }
+                else
+                {
+                    <MudTable Items="@_players" Hover="true" Breakpoint="Breakpoint.Sm" Dense="true" FixedHeader="true">
+                        <HeaderContent>
+                            <MudTh>Name</MudTh>
+                            <MudTh>Position</MudTh>
+                            <MudTh>Jersey #</MudTh>
+                            <MudTh>Team</MudTh>
+                        </HeaderContent>
+                        <RowTemplate>
+                            <MudTd DataLabel="Name">@context.Name</MudTd>
+                            <MudTd DataLabel="Position">@context.Position</MudTd>
+                            <MudTd DataLabel="Jersey #">@context.JerseyNumber</MudTd>
+                            <MudTd DataLabel="Team">@context.TeamName</MudTd>
+                        </RowTemplate>
+                    </MudTable>
+                }
+            </MudCardContent>
+        </MudCard>
+    </MudItem>
+</MudGrid>
+
+<MudDialog @bind-Visible="_showCreateDialog">
+    <TitleContent>
+        <MudText Typo="Typo.h6">Create New Player</MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudTextField @bind-Value="_newPlayerName" Label="Name" Required="true" />
+        <MudTextField @bind-Value="_newPlayerPosition" Label="Position" Class="mt-3" />
+        <MudNumericField @bind-Value="_newPlayerJerseyNumber" Label="Jersey Number" Class="mt-3" />
+        <MudSelect T="Guid?" @bind-Value="_newPlayerTeamId" Label="Team" Variant="Variant.Outlined" Class="mt-3">
+            @foreach (var team in _teams)
+            {
+                <MudSelectItem Value="@team.Id">@team.Name</MudSelectItem>
+            }
+        </MudSelect>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="() => _showCreateDialog = false">Cancel</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="CreatePlayer">Create</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    private bool _loading = true;
+    private List<DotMatchLens.Football.Models.PlayerDto> _players = [];
+    private List<DotMatchLens.Football.Models.TeamDto> _teams = [];
+    private Guid? _teamFilter = null;
+    
+    private bool _showCreateDialog = false;
+    private string _newPlayerName = "";
+    private string _newPlayerPosition = "";
+    private int? _newPlayerJerseyNumber = null;
+    private Guid? _newPlayerTeamId = null;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Task.WhenAll(LoadTeams(), LoadPlayers());
+    }
+
+    private async Task LoadTeams()
+    {
+        try
+        {
+            _teams = await FootballApi.GetTeamsAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading teams: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task LoadPlayers()
+    {
+        _loading = true;
+        try
+        {
+            _players = await FootballApi.GetPlayersAsync(_teamFilter);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading players: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private async Task CreatePlayer()
+    {
+        if (string.IsNullOrWhiteSpace(_newPlayerName))
+        {
+            Snackbar.Add("Player name is required", Severity.Warning);
+            return;
+        }
+
+        try
+        {
+            await FootballApi.CreatePlayerAsync(_newPlayerName, _newPlayerPosition, _newPlayerJerseyNumber, _newPlayerTeamId);
+            Snackbar.Add("Player created successfully", Severity.Success);
+            _showCreateDialog = false;
+            _newPlayerName = "";
+            _newPlayerPosition = "";
+            _newPlayerJerseyNumber = null;
+            _newPlayerTeamId = null;
+            await LoadPlayers();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error creating player: {ex.Message}", Severity.Error);
+        }
+    }
+}

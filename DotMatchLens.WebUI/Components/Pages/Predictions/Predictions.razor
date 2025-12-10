@@ -1,0 +1,124 @@
+@page "/predictions"
+@rendermode InteractiveServer
+@inject FootballApiService FootballApi
+@inject PredictionsApiService PredictionsApi
+@inject ISnackbar Snackbar
+
+<PageTitle>Predictions - DotMatchLens</PageTitle>
+
+<MudText Typo="Typo.h4" Class="mb-4">Match Predictions</MudText>
+
+<MudGrid>
+    <MudItem xs="12">
+        <MudCard>
+            <MudCardHeader>
+                <CardHeaderContent>
+                    <MudText Typo="Typo.h6">Generate Prediction</MudText>
+                </CardHeaderContent>
+            </MudCardHeader>
+            <MudCardContent>
+                <MudSelect T="Guid?" @bind-Value="_selectedMatchId" Label="Select Match" Variant="Variant.Outlined">
+                    @foreach (var match in _matches)
+                    {
+                        <MudSelectItem Value="@match.Id">@match.HomeTeamName vs @match.AwayTeamName (@match.MatchDate.ToString("yyyy-MM-dd"))</MudSelectItem>
+                    }
+                </MudSelect>
+                <MudTextField @bind-Value="_additionalContext" Label="Additional Context (Optional)" Lines="3" 
+                              Variant="Variant.Outlined" Class="mt-3" />
+                <MudButton OnClick="GeneratePrediction" Variant="Variant.Filled" Color="Color.Primary" 
+                           StartIcon="@Icons.Material.Filled.Psychology" Disabled="_generating" Class="mt-3">
+                    @if (_generating)
+                    {
+                        <MudProgressCircular Size="Size.Small" Indeterminate="true" />
+                        <MudText Class="ml-2">Generating...</MudText>
+                    }
+                    else
+                    {
+                        <span>Generate Prediction</span>
+                    }
+                </MudButton>
+            </MudCardContent>
+        </MudCard>
+    </MudItem>
+
+    @if (_currentPrediction != null)
+    {
+        <MudItem xs="12">
+            <MudCard>
+                <MudCardHeader>
+                    <CardHeaderContent>
+                        <MudText Typo="Typo.h6">Prediction Result</MudText>
+                    </CardHeaderContent>
+                </MudCardHeader>
+                <MudCardContent>
+                    <MudText><strong>Match:</strong> @_currentPrediction.Value.HomeTeamName vs @_currentPrediction.Value.AwayTeamName</MudText>
+                    <MudText Class="mt-2"><strong>Predicted Score:</strong> @_currentPrediction.Value.PredictedHomeScore - @_currentPrediction.Value.PredictedAwayScore</MudText>
+                    <MudText Class="mt-2"><strong>Probabilities:</strong></MudText>
+                    <MudText>Home Win: @(_currentPrediction.Value.HomeWinProbability.ToString("P2"))</MudText>
+                    <MudText>Draw: @(_currentPrediction.Value.DrawProbability.ToString("P2"))</MudText>
+                    <MudText>Away Win: @(_currentPrediction.Value.AwayWinProbability.ToString("P2"))</MudText>
+                    @if (!string.IsNullOrEmpty(_currentPrediction.Value.Reasoning))
+                    {
+                        <MudText Class="mt-3"><strong>Reasoning:</strong></MudText>
+                        <MudText>@_currentPrediction.Value.Reasoning</MudText>
+                    }
+                    <MudText Class="mt-2"><strong>Confidence:</strong> @(_currentPrediction.Value.Confidence.ToString("P2"))</MudText>
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+    }
+</MudGrid>
+
+@code {
+    private List<DotMatchLens.Football.Models.MatchDto> _matches = [];
+    private Guid? _selectedMatchId = null;
+    private string _additionalContext = "";
+    private bool _generating = false;
+    private DotMatchLens.Predictions.Models.PredictionDto? _currentPrediction = null;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            _matches = await FootballApi.GetMatchesAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading matches: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task GeneratePrediction()
+    {
+        if (!_selectedMatchId.HasValue)
+        {
+            Snackbar.Add("Please select a match", Severity.Warning);
+            return;
+        }
+
+        _generating = true;
+        _currentPrediction = null;
+
+        try
+        {
+            var prediction = await PredictionsApi.GeneratePredictionAsync(_selectedMatchId.Value, _additionalContext);
+            if (prediction != null)
+            {
+                _currentPrediction = prediction;
+                Snackbar.Add("Prediction generated successfully", Severity.Success);
+            }
+            else
+            {
+                Snackbar.Add("Failed to generate prediction", Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error generating prediction: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _generating = false;
+        }
+    }
+}

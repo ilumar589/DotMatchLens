@@ -1,0 +1,172 @@
+@page "/teams"
+@rendermode InteractiveServer
+@inject FootballApiService FootballApi
+@inject ISnackbar Snackbar
+
+<PageTitle>Teams - DotMatchLens</PageTitle>
+
+<MudText Typo="Typo.h4" Class="mb-4">Teams</MudText>
+
+<MudGrid>
+    <MudItem xs="12">
+        <MudCard>
+            <MudCardContent>
+                <MudGrid>
+                    <MudItem xs="12" sm="4">
+                        <MudTextField @bind-Value="_nameFilter" Label="Filter by Name" Variant="Variant.Outlined" 
+                                      Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" />
+                    </MudItem>
+                    <MudItem xs="12" sm="4">
+                        <MudTextField @bind-Value="_countryFilter" Label="Filter by Country" Variant="Variant.Outlined" 
+                                      Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Public" />
+                    </MudItem>
+                    <MudItem xs="12" sm="4" Class="d-flex align-center">
+                        <MudButton OnClick="LoadTeams" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Search">Search</MudButton>
+                        <MudButton OnClick="() => _showCreateDialog = true" Variant="Variant.Filled" Color="Color.Secondary" StartIcon="@Icons.Material.Filled.Add" Class="ml-2">Create Team</MudButton>
+                    </MudItem>
+                </MudGrid>
+            </MudCardContent>
+        </MudCard>
+    </MudItem>
+
+    <MudItem xs="12">
+        <MudCard>
+            <MudCardContent>
+                @if (_loading)
+                {
+                    <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-7" />
+                }
+                else
+                {
+                    <MudTable Items="@_teams" Hover="true" Breakpoint="Breakpoint.Sm" Dense="true" FixedHeader="true">
+                        <HeaderContent>
+                            <MudTh>Name</MudTh>
+                            <MudTh>Country</MudTh>
+                            <MudTh>League</MudTh>
+                            <MudTh>Actions</MudTh>
+                        </HeaderContent>
+                        <RowTemplate>
+                            <MudTd DataLabel="Name">@context.Name</MudTd>
+                            <MudTd DataLabel="Country">@context.Country</MudTd>
+                            <MudTd DataLabel="League">@context.League</MudTd>
+                            <MudTd DataLabel="Actions">
+                                <MudIconButton Icon="@Icons.Material.Filled.Info" Size="Size.Small" Color="Color.Info" 
+                                               OnClick="() => ViewTeamDetails(context.Id)" />
+                            </MudTd>
+                        </RowTemplate>
+                    </MudTable>
+                }
+            </MudCardContent>
+        </MudCard>
+    </MudItem>
+</MudGrid>
+
+<MudDialog @bind-Visible="_showCreateDialog">
+    <TitleContent>
+        <MudText Typo="Typo.h6">Create New Team</MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudTextField @bind-Value="_newTeamName" Label="Name" Required="true" />
+        <MudTextField @bind-Value="_newTeamCountry" Label="Country" Class="mt-3" />
+        <MudTextField @bind-Value="_newTeamLeague" Label="League" Class="mt-3" />
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="() => _showCreateDialog = false">Cancel</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="CreateTeam">Create</MudButton>
+    </DialogActions>
+</MudDialog>
+
+<MudDialog @bind-Visible="_showDetailsDialog">
+    <TitleContent>
+        <MudText Typo="Typo.h6">Team Details</MudText>
+    </TitleContent>
+    <DialogContent>
+        @if (_selectedTeam != null)
+        {
+            <MudText><strong>Name:</strong> @_selectedTeam.Value.Name</MudText>
+            <MudText><strong>Country:</strong> @_selectedTeam.Value.Country</MudText>
+            <MudText><strong>League:</strong> @_selectedTeam.Value.League</MudText>
+            <MudText><strong>ID:</strong> @_selectedTeam.Value.Id</MudText>
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="() => _showDetailsDialog = false">Close</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    private bool _loading = true;
+    private List<DotMatchLens.Football.Models.TeamDto> _teams = [];
+    private string _nameFilter = "";
+    private string _countryFilter = "";
+    
+    private bool _showCreateDialog = false;
+    private string _newTeamName = "";
+    private string _newTeamCountry = "";
+    private string _newTeamLeague = "";
+
+    private bool _showDetailsDialog = false;
+    private DotMatchLens.Football.Models.TeamDto? _selectedTeam;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadTeams();
+    }
+
+    private async Task LoadTeams()
+    {
+        _loading = true;
+        try
+        {
+            _teams = await FootballApi.GetTeamsAsync(
+                string.IsNullOrWhiteSpace(_nameFilter) ? null : _nameFilter,
+                string.IsNullOrWhiteSpace(_countryFilter) ? null : _countryFilter
+            );
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading teams: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private async Task CreateTeam()
+    {
+        if (string.IsNullOrWhiteSpace(_newTeamName))
+        {
+            Snackbar.Add("Team name is required", Severity.Warning);
+            return;
+        }
+
+        try
+        {
+            await FootballApi.CreateTeamAsync(_newTeamName, _newTeamCountry, _newTeamLeague);
+            Snackbar.Add("Team created successfully", Severity.Success);
+            _showCreateDialog = false;
+            _newTeamName = "";
+            _newTeamCountry = "";
+            _newTeamLeague = "";
+            await LoadTeams();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error creating team: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task ViewTeamDetails(Guid teamId)
+    {
+        try
+        {
+            _selectedTeam = await FootballApi.GetTeamByIdAsync(teamId);
+            _showDetailsDialog = true;
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading team details: {ex.Message}", Severity.Error);
+        }
+    }
+}
