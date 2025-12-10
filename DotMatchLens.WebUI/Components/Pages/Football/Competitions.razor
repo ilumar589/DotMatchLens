@@ -1,0 +1,79 @@
+@page "/competitions"
+@rendermode InteractiveServer
+@inject FootballApiService FootballApi
+@inject ISnackbar Snackbar
+
+<PageTitle>Competitions - DotMatchLens</PageTitle>
+
+<MudText Typo="Typo.h4" Class="mb-4">Competitions</MudText>
+
+<MudCard>
+    <MudCardContent>
+        <MudText Typo="Typo.h6" Class="mb-3">Sync Competition Data</MudText>
+        <MudGrid>
+            <MudItem xs="12" sm="8">
+                <MudTextField @bind-Value="_competitionCode" Label="Competition Code" Variant="Variant.Outlined" 
+                              Placeholder="e.g., PL, CL, WC" />
+            </MudItem>
+            <MudItem xs="12" sm="4" Class="d-flex align-center">
+                <MudButton OnClick="SyncCompetition" Variant="Variant.Filled" Color="Color.Primary" 
+                           StartIcon="@Icons.Material.Filled.Sync" Disabled="_syncing">
+                    @if (_syncing)
+                    {
+                        <MudProgressCircular Size="Size.Small" Indeterminate="true" />
+                        <MudText Class="ml-2">Syncing...</MudText>
+                    }
+                    else
+                    {
+                        <span>Sync</span>
+                    }
+                </MudButton>
+            </MudItem>
+        </MudGrid>
+        
+        @if (!string.IsNullOrEmpty(_syncResult))
+        {
+            <MudAlert Severity="Severity.Success" Class="mt-3">@_syncResult</MudAlert>
+        }
+    </MudCardContent>
+</MudCard>
+
+@code {
+    private string _competitionCode = "";
+    private bool _syncing = false;
+    private string _syncResult = "";
+
+    private async Task SyncCompetition()
+    {
+        if (string.IsNullOrWhiteSpace(_competitionCode))
+        {
+            Snackbar.Add("Please enter a competition code", Severity.Warning);
+            return;
+        }
+
+        _syncing = true;
+        _syncResult = "";
+        
+        try
+        {
+            var result = await FootballApi.SyncCompetitionAsync(_competitionCode);
+            if (result != null && result.Value.Success)
+            {
+                _syncResult = $"Successfully synced competition: {result.Value.Competition?.Name}. Processed {result.Value.SeasonsProcessed} seasons.";
+                Snackbar.Add("Competition synced successfully", Severity.Success);
+            }
+            else
+            {
+                Snackbar.Add($"Failed to sync competition: {result?.Message ?? "Unknown error"}", Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error syncing competition: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _syncing = false;
+        }
+    }
+}

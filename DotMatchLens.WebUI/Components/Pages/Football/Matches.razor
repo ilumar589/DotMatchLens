@@ -1,0 +1,160 @@
+@page "/matches"
+@rendermode InteractiveServer
+@inject FootballApiService FootballApi
+@inject ISnackbar Snackbar
+
+<PageTitle>Matches - DotMatchLens</PageTitle>
+
+<MudText Typo="Typo.h4" Class="mb-4">Matches</MudText>
+
+<MudGrid>
+    <MudItem xs="12">
+        <MudCard>
+            <MudCardContent>
+                <MudGrid>
+                    <MudItem xs="12" sm="4">
+                        <MudDatePicker @bind-Date="_startDate" Label="Start Date" Variant="Variant.Outlined" />
+                    </MudItem>
+                    <MudItem xs="12" sm="4">
+                        <MudDatePicker @bind-Date="_endDate" Label="End Date" Variant="Variant.Outlined" />
+                    </MudItem>
+                    <MudItem xs="12" sm="4" Class="d-flex align-center">
+                        <MudButton OnClick="LoadMatches" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Search">Search</MudButton>
+                        <MudButton OnClick="() => _showCreateDialog = true" Variant="Variant.Filled" Color="Color.Secondary" StartIcon="@Icons.Material.Filled.Add" Class="ml-2">Create Match</MudButton>
+                    </MudItem>
+                </MudGrid>
+            </MudCardContent>
+        </MudCard>
+    </MudItem>
+
+    <MudItem xs="12">
+        <MudCard>
+            <MudCardContent>
+                @if (_loading)
+                {
+                    <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-7" />
+                }
+                else
+                {
+                    <MudTable Items="@_matches" Hover="true" Breakpoint="Breakpoint.Sm" Dense="true">
+                        <HeaderContent>
+                            <MudTh>Date</MudTh>
+                            <MudTh>Home Team</MudTh>
+                            <MudTh>Away Team</MudTh>
+                            <MudTh>Score</MudTh>
+                            <MudTh>Stadium</MudTh>
+                            <MudTh>Status</MudTh>
+                        </HeaderContent>
+                        <RowTemplate>
+                            <MudTd DataLabel="Date">@context.MatchDate.ToString("yyyy-MM-dd")</MudTd>
+                            <MudTd DataLabel="Home Team">@context.HomeTeamName</MudTd>
+                            <MudTd DataLabel="Away Team">@context.AwayTeamName</MudTd>
+                            <MudTd DataLabel="Score">@context.HomeScore - @context.AwayScore</MudTd>
+                            <MudTd DataLabel="Stadium">@context.Stadium</MudTd>
+                            <MudTd DataLabel="Status">@context.Status</MudTd>
+                        </RowTemplate>
+                    </MudTable>
+                }
+            </MudCardContent>
+        </MudCard>
+    </MudItem>
+</MudGrid>
+
+<MudDialog @bind-Visible="_showCreateDialog">
+    <TitleContent>
+        <MudText Typo="Typo.h6">Create New Match</MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudSelect T="Guid?" @bind-Value="_newMatchHomeTeamId" Label="Home Team" Variant="Variant.Outlined" Required="true">
+            @foreach (var team in _teams)
+            {
+                <MudSelectItem Value="@team.Id">@team.Name</MudSelectItem>
+            }
+        </MudSelect>
+        <MudSelect T="Guid?" @bind-Value="_newMatchAwayTeamId" Label="Away Team" Variant="Variant.Outlined" Required="true" Class="mt-3">
+            @foreach (var team in _teams)
+            {
+                <MudSelectItem Value="@team.Id">@team.Name</MudSelectItem>
+            }
+        </MudSelect>
+        <MudDatePicker @bind-Date="_newMatchDate" Label="Match Date" Variant="Variant.Outlined" Required="true" Class="mt-3" />
+        <MudTextField @bind-Value="_newMatchStadium" Label="Stadium" Class="mt-3" />
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="() => _showCreateDialog = false">Cancel</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="CreateMatch">Create</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    private bool _loading = true;
+    private List<DotMatchLens.Football.Models.MatchDto> _matches = [];
+    private List<DotMatchLens.Football.Models.TeamDto> _teams = [];
+    private DateTime? _startDate = null;
+    private DateTime? _endDate = null;
+    
+    private bool _showCreateDialog = false;
+    private Guid? _newMatchHomeTeamId = null;
+    private Guid? _newMatchAwayTeamId = null;
+    private DateTime? _newMatchDate = DateTime.Today;
+    private string _newMatchStadium = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Task.WhenAll(LoadTeams(), LoadMatches());
+    }
+
+    private async Task LoadTeams()
+    {
+        try
+        {
+            _teams = await FootballApi.GetTeamsAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading teams: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task LoadMatches()
+    {
+        _loading = true;
+        try
+        {
+            _matches = await FootballApi.GetMatchesAsync(_startDate, _endDate);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading matches: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private async Task CreateMatch()
+    {
+        if (!_newMatchHomeTeamId.HasValue || !_newMatchAwayTeamId.HasValue || !_newMatchDate.HasValue)
+        {
+            Snackbar.Add("Home team, away team, and date are required", Severity.Warning);
+            return;
+        }
+
+        try
+        {
+            await FootballApi.CreateMatchAsync(_newMatchHomeTeamId.Value, _newMatchAwayTeamId.Value, _newMatchDate.Value, _newMatchStadium);
+            Snackbar.Add("Match created successfully", Severity.Success);
+            _showCreateDialog = false;
+            _newMatchHomeTeamId = null;
+            _newMatchAwayTeamId = null;
+            _newMatchDate = DateTime.Today;
+            _newMatchStadium = "";
+            await LoadMatches();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error creating match: {ex.Message}", Severity.Error);
+        }
+    }
+}
